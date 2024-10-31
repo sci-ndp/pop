@@ -1,0 +1,7 @@
+pydantic_settings
+uvicorn
+fastapi
+ckanapi
+python-multipart
+jinja2
+flake8

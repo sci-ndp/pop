@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  api:
+    image: python:3.9  # Use the official Python image
+    working_dir: /code  # Define the working directory
+    container_name: pop-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/code/api
+      - ./env_variables:/code/env_variables
+      - ./requirements.txt:/code/requirements.txt
+    networks:
+      - backend
+    # Add a step to install dependencies before starting the server
+    entrypoint: >
+      /bin/bash -c
+      "pip install --no-cache-dir --upgrade -r /code/requirements.txt &&
+      uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --workers 5"
+
+networks:
+  backend:
+    driver: bridge
