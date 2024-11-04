@@ -21,8 +21,8 @@ jobs:
 
     - name: Copy env files
       run: |
-        cp ./env_variables/example.env_docker ./env_variables/.env_docker
-        cp ./env_variables/example.env_mongo ./env_variables/.env_mongo
+        cp ./env_variables/example.env_ckan ./env_variables/.env_ckan
+        cp ./env_variables/example.env_keycloak ./env_variables/.env_keycloak
         cp ./env_variables/example.env_swagger ./env_variables/.env_swagger
 
     - name: Make start-dockers.sh executable
@@ -32,42 +32,42 @@ jobs:
       run: ./start-dockers.sh
 
     - name: Stream FastAPI container logs in background
-      run: docker logs -f fastapi-scidx-fed &
+      run: docker logs -f pop-api &
 
     - name: Wait for FastAPI container
       run: |
-        while ! docker ps | grep fastapi-scidx-fed; do
+        while ! docker ps | grep pop-api; do
           echo "Waiting for FastAPI container to be ready..."
           sleep 5
         done
 
     # Verify if pydantic_settings is installed
     - name: Verify installed packages
-      run: docker exec fastapi-scidx-fed pip list
+      run: docker exec pop-api pip list
 
     # Reinstall pydantic_settings if necessary
     - name: Reinstall pydantic_settings
-      run: docker exec fastapi-scidx-fed pip install --no-cache-dir pydantic_settings
+      run: docker exec pop-api pip install --no-cache-dir pydantic_settings
 
     # Reinstall pytest manually
     - name: Reinstall pytest
-      run: docker exec fastapi-scidx-fed pip install --no-cache-dir pytest
+      run: docker exec pop-api pip install --no-cache-dir pytest
 
     # Show pytest details
     - name: Show pytest details
-      run: docker exec fastapi-scidx-fed pip show pytest
+      run: docker exec pop-api pip show pytest
 
     # Run tests with pytest
     - name: Run tests with pytest
-      run: docker exec fastapi-scidx-fed pytest
+      run: docker exec pop-api pytest
 
     # Reinstall flake8 manually
     - name: Reinstall flake8
-      run: docker exec fastapi-scidx-fed pip install --no-cache-dir flake8
+      run: docker exec pop-api pip install --no-cache-dir flake8
 
     # Run flake8 after reinstall
     - name: Run flake8 for linting
-      run: docker exec fastapi-scidx-fed flake8 . --count --show-source --statistics
+      run: docker exec pop-api flake8 . --count --show-source --statistics
 
     - name: Stop and clean up Docker containers
       run: ./stop-dockers.sh

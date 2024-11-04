@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   api:
-    image: python:3.9  # Use the official Python image
-    working_dir: /code  # Define the working directory
+    image: python:3.9
+    working_dir: /code
     container_name: pop-api
     ports:
       - "8000:8000"
