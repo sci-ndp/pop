@@ -1,0 +1,120 @@
+name: CI with Conditional Auto-Merge
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Copy env files
+      run: |
+        cp ./env_variables/example.env_docker ./env_variables/.env_docker
+        cp ./env_variables/example.env_mongo ./env_variables/.env_mongo
+        cp ./env_variables/example.env_swagger ./env_variables/.env_swagger
+
+    - name: Make start-dockers.sh executable
+      run: chmod +x start-dockers.sh
+
+    - name: Run Docker containers with start-dockers.sh
+      run: ./start-dockers.sh
+
+    - name: Stream FastAPI container logs in background
+      run: docker logs -f fastapi-scidx-fed &
+
+    - name: Wait for FastAPI container
+      run: |
+        while ! docker ps | grep fastapi-scidx-fed; do
+          echo "Waiting for FastAPI container to be ready..."
+          sleep 5
+        done
+
+    # Verify if pydantic_settings is installed
+    - name: Verify installed packages
+      run: docker exec fastapi-scidx-fed pip list
+
+    # Reinstall pydantic_settings if necessary
+    - name: Reinstall pydantic_settings
+      run: docker exec fastapi-scidx-fed pip install --no-cache-dir pydantic_settings
+
+    # Reinstall pytest manually
+    - name: Reinstall pytest
+      run: docker exec fastapi-scidx-fed pip install --no-cache-dir pytest
+
+    # Show pytest details
+    - name: Show pytest details
+      run: docker exec fastapi-scidx-fed pip show pytest
+
+    # Run tests with pytest
+    - name: Run tests with pytest
+      run: docker exec fastapi-scidx-fed pytest
+
+    # Reinstall flake8 manually
+    - name: Reinstall flake8
+      run: docker exec fastapi-scidx-fed pip install --no-cache-dir flake8
+
+    # Run flake8 after reinstall
+    - name: Run flake8 for linting
+      run: docker exec fastapi-scidx-fed flake8 . --count --show-source --statistics
+
+    - name: Stop and clean up Docker containers
+      run: ./stop-dockers.sh
+
+  check-tests-modified:
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      tests_modified: ${{ steps.check_files.outputs.tests_modified }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Fetch history for diffing
+        run: git fetch --depth=2
+
+      - name: Check if tests are modified
+        id: check_files
+        run: |
+          # List of existing test files
+          existing_tests=$(git ls-tree -r HEAD --name-only | grep '^tests/' || true)
+          
+          # Check if there are previous commits to compare with
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            # Find modified test files in this PR
+            modified_tests=$(git diff --name-only HEAD^ HEAD | grep '^tests/' || true)
+          else
+            # If no previous commit, assume no modified tests
+            modified_tests=""
+          fi
+          
+          # Compare lists if both are non-empty
+          if [ -n "$existing_tests" ] && [ -n "$modified_tests" ] && echo "$modified_tests" | grep -qFxf <(echo "$existing_tests"); then
+            echo "tests_modified=true" >> $GITHUB_ENV
+          else
+            echo "tests_modified=false" >> $GITHUB_ENV
+          fi
+
+  auto-merge:
+    runs-on: ubuntu-latest
+    needs: [build, check-tests-modified]
+    if: needs.check-tests-modified.outputs.tests_modified == 'false'
+    steps:
+    - name: Merge PR Automatically
+      uses: peter-evans/merge-pull-request@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        merge-method: squash
+        commit-message: automatic

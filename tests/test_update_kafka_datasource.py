@@ -11,8 +11,8 @@ client = TestClient(app)
 
 def test_update_kafka_datasource_success():
     # Mock 'update_kafka' to simulate successful update
-    with patch('api.services.kafka_services.update_kafka') as mock_update_kafka:
-        mock_update_kafka.return_value = True
+    with patch('api.services.kafka_services.update_kafka') as mock_update:
+        mock_update.return_value = True
 
         # Override 'get_current_user' dependency
         def mock_get_current_user():
@@ -31,7 +31,7 @@ def test_update_kafka_datasource_success():
         assert response.json() == {
             "message": "Kafka dataset updated successfully"
         }
-        mock_update_kafka.assert_called_once_with(
+        mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
             dataset_title=None,
@@ -51,8 +51,8 @@ def test_update_kafka_datasource_success():
 
 def test_update_kafka_datasource_not_found():
     # Mock 'update_kafka' to simulate dataset not found
-    with patch('api.services.kafka_services.update_kafka') as mock_update_kafka:
-        mock_update_kafka.return_value = False
+    with patch('api.services.kafka_services.update_kafka') as mock_update:
+        mock_update.return_value = False
 
         # Override 'get_current_user' dependency
         def mock_get_current_user():
@@ -69,7 +69,7 @@ def test_update_kafka_datasource_not_found():
         response = client.put(f"/kafka/{dataset_id}", json=data)
         assert response.status_code == 404  # Not Found
         assert response.json() == {"detail": "Kafka dataset not found"}
-        mock_update_kafka.assert_called_once_with(
+        mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
             dataset_title=None,
@@ -89,8 +89,9 @@ def test_update_kafka_datasource_not_found():
 
 def test_update_kafka_datasource_bad_request():
     # Mock 'update_kafka' to raise an exception
-    with patch('api.services.kafka_services.update_kafka') as mock_update_kafka:
-        mock_update_kafka.side_effect = Exception("Error updating Kafka dataset")
+    with patch('api.services.kafka_services.update_kafka') as mock_update:
+        mock_update.side_effect = Exception(
+            "Error updating Kafka dataset")
 
         # Override 'get_current_user' dependency
         def mock_get_current_user():
@@ -107,7 +108,7 @@ def test_update_kafka_datasource_bad_request():
         response = client.put(f"/kafka/{dataset_id}", json=data)
         assert response.status_code == 400  # Bad Request
         assert response.json() == {"detail": "Error updating Kafka dataset"}
-        mock_update_kafka.assert_called_once_with(
+        mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
             dataset_title=None,
