@@ -88,5 +88,7 @@ async def update_kafka_datasource(
             raise HTTPException(
                 status_code=404, detail="Kafka dataset not found")
         return {"message": "Kafka dataset updated successfully"}
+    except HTTPException as e:
+        raise e  # Re-raise HTTP exceptions without modification
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

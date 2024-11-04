@@ -100,9 +100,11 @@ async def search_datasource(data: SearchRequest):
         raised with a detailed message.
     """
     try:
-        if 'resource_format' in data:
-            data['resource_format'] = data['resource_format'].lower()
-        results = await datasource_services.search_datasource(**data.dict())
+        # Convert 'resource_format' to lowercase if it's provided
+        if data.resource_format:
+            data.resource_format = data.resource_format.lower()
+        results = await datasource_services.search_datasource(
+            **data.model_dump())
         return results
     except Exception as e:
 

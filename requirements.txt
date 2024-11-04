@@ -5,3 +5,7 @@ ckanapi
 python-multipart
 jinja2
 flake8
+pytest
+httpx
+pytest-mock
+trio

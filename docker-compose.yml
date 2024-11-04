@@ -11,6 +11,9 @@ services:
       - ./api:/code/api
       - ./env_variables:/code/env_variables
       - ./requirements.txt:/code/requirements.txt
+      - ./tests:/code/tests
+    environment:
+      - PYTHONPATH=/code
     networks:
       - backend
     # Add a step to install dependencies before starting the server
