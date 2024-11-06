@@ -1,4 +1,3 @@
-import json
 from api.config import ckan_settings
 
 

@@ -27,7 +27,7 @@ def test_create_kafka_datasource_success():
             "kafka_port": "kafka_port",
             "dataset_description": "This is an example Kafka topic.",
             "extras": {"key1": "value1", "key2": "value2"}
-        } 
+        }
 
         response = client.post("/kafka", json=data)
         assert response.status_code == 201

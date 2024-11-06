@@ -1,5 +1,4 @@
-import json
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from api.config.ckan_settings import ckan_settings
 import logging

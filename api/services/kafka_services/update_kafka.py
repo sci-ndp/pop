@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 from api.config.ckan_settings import ckan_settings
 
