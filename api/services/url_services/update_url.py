@@ -33,25 +33,7 @@ async def update_url(
     # Extract current file type and processing from the resource
     current_extras = {
         extra['key']: extra['value'] for extra in resource.get('extras', [])}
-    current_file_type = current_extras.get("file_type")
-    current_processing = json.loads(current_extras.get("processing", "{}"))
-
-    # Validate the processing information based on whether the file type
-    # has changed or not
-    if file_type and file_type != current_file_type:
-        # If the file type has changed
-        if processing is not None:
-            # Even if processing is an empty dict, it should be used to
-            # update the resource
-            processing = validate_manual_processing_info(
-                file_type, processing)
-        else:
-            processing = validate_manual_processing_info(
-                file_type, current_processing)
-    elif processing is not None:
-        # If the file type hasn't changed but processing info is provided
-        processing = validate_manual_processing_info(
-            current_file_type, processing)
+    current_file_type = current_extras.get("file_type") 
 
     # Preserve existing resource fields
     updated_data = {

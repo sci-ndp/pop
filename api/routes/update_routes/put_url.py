@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from api.services.url_services.update_url import update_url
 from api.models.update_url_model import URLUpdateRequest
-from typing import Dict, Any
+from typing import Dict
 
 from api.services.keycloak_services.get_current_user import get_current_user
 

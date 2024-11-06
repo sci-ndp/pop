@@ -67,7 +67,6 @@ def add_url(resource_name,
         "file_type": file_type
     }
 
-
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(url_extras)
 

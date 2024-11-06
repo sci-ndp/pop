@@ -2,12 +2,15 @@ from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any
 from enum import Enum
 # Define the main request model
+
+
 class FileTypeEnum(str, Enum):
     stream = "stream"
     CSV = "CSV"
     TXT = "TXT"
     JSON = "JSON"
     NetCDF = "NetCDF"
+
 
 class URLUpdateRequest(BaseModel):
     resource_name: Optional[str] = Field(
@@ -49,3 +52,4 @@ class URLUpdateRequest(BaseModel):
             "package as extras."),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )
+    
