@@ -2,6 +2,13 @@ from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any
 from enum import Enum
 # Define the main request model
+class FileTypeEnum(str, Enum):
+    stream = "stream"
+    CSV = "CSV"
+    TXT = "TXT"
+    JSON = "JSON"
+    NetCDF = "NetCDF"
+
 class URLUpdateRequest(BaseModel):
     resource_name: Optional[str] = Field(
         None,

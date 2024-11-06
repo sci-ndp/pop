@@ -26,13 +26,6 @@ def test_create_url_resource_success():
             "file_type": "CSV",
             "notes": "This is a test resource.",
             "extras": {"key1": "value1", "key2": "value2"},
-            "mapping": {"field1": "mapping1", "field2": "mapping2"},
-            "processing": {
-                "delimiter": ",",
-                "header_line": 1,
-                "start_line": 2,
-                "comment_char": "#"
-            }
         }
 
         response = client.post("/url", json=data)
@@ -48,13 +41,6 @@ def test_create_url_resource_success():
             file_type="CSV",
             notes="This is a test resource.",
             extras={"key1": "value1", "key2": "value2"},
-            mapping={"field1": "mapping1", "field2": "mapping2"},
-            processing={
-                "delimiter": ",",
-                "header_line": 1,
-                "start_line": 2,
-                "comment_char": "#"
-            }
         )
 
         # Clean up dependency overrides

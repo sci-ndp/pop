@@ -27,10 +27,7 @@ def test_create_kafka_datasource_success():
             "kafka_port": "kafka_port",
             "dataset_description": (
                 "This is an example Kafka topic."
-            ),
-            "extras": {"key1": "value1", "key2": "value2"},
-            "mapping": {"field1": "mapping1", "field2": "mapping2"},
-            "processing": {"data_key": "data", "info_key": "info"}
+            )
         }
 
         response = client.post("/kafka", json=data)
@@ -49,8 +46,6 @@ def test_create_kafka_datasource_success():
                 "This is an example Kafka topic."
             ),
             extras={"key1": "value1", "key2": "value2"},
-            mapping={"field1": "mapping1", "field2": "mapping2"},
-            processing={"data_key": "data", "info_key": "info"}
         )
 
         # Clean up the override

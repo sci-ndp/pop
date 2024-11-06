@@ -41,8 +41,6 @@ def test_update_kafka_datasource_success():
             kafka_port=None,
             dataset_description=None,
             extras=None,
-            mapping=None,
-            processing=None
         )
 
         # Clean up dependency overrides
@@ -79,8 +77,6 @@ def test_update_kafka_datasource_not_found():
             kafka_port=None,
             dataset_description=None,
             extras=None,
-            mapping=None,
-            processing=None
         )
 
         # Clean up dependency overrides
@@ -118,8 +114,6 @@ def test_update_kafka_datasource_bad_request():
             kafka_port=None,
             dataset_description=None,
             extras=None,
-            mapping=None,
-            processing=None
         )
 
         # Clean up dependency overrides
