@@ -15,9 +15,7 @@ def add_kafka(dataset_name,
               kafka_host,
               kafka_port,
               dataset_description,
-              extras=None,
-              mapping=None,
-              processing=None):
+              extras=None):
     """
     Add a Kafka topic and its associated metadata to the system.
 
@@ -40,10 +38,6 @@ def add_kafka(dataset_name,
     extras : dict, optional
         Additional metadata to be added to the dataset as extras
         (default is None).
-    mapping : dict, optional
-        Mapping information for the dataset (default is None).
-    processing : dict, optional
-        Processing information for the dataset (default is None).
 
     Returns
     -------
@@ -80,12 +74,6 @@ def add_kafka(dataset_name,
         'port': kafka_port,
         'topic': kafka_topic
     }
-
-    if mapping:
-        kafka_extras['mapping'] = json.dumps(mapping)
-
-    if processing:
-        kafka_extras['processing'] = json.dumps(processing)
 
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(kafka_extras)

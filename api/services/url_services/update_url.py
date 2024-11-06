@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 # Define a set of reserved keys that should not be used in the extras
 RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources',
-    'collection', 'url', 'mapping', 'processing', 'file_type'}
+    'collection', 'url', 'file_type'}
 
 
 async def update_url(
@@ -20,8 +20,6 @@ async def update_url(
     file_type: Optional[str] = None,
     notes: Optional[str] = None,
     extras: Optional[Dict[str, str]] = None,
-    mapping: Optional[Dict[str, str]] = None,
-    processing: Optional[Dict[str, Any]] = None,
 ):
     ckan = ckan_settings.ckan
 
@@ -76,12 +74,6 @@ async def update_url(
     # Update the extras with new mapping, processing, and file type if provided
     if file_type:
         current_extras['file_type'] = file_type
-    if mapping:
-        current_extras['mapping'] = json.dumps(mapping)
-    if processing is not None:
-        # If processing is explicitly provided (even if empty), update it
-        current_extras['processing'] = json.dumps(processing)
-
     # Convert the merged extras back to CKAN format
     updated_data['extras'] = [
         {'key': k, 'value': v} for k, v in current_extras.items()]
@@ -102,47 +94,3 @@ async def update_url(
             f"Error updating resource with ID {resource_id}: {str(e)}")
 
     return {"message": "Resource updated successfully"}
-
-
-def validate_manual_processing_info(file_type: str, processing: dict):
-    """
-    Manually validate the processing information based on the file type.
-    """
-
-    # Define expected fields for each file type
-    expected_fields = {
-        "stream": {"refresh_rate", "data_key"},
-        "CSV": {"delimiter", "header_line", "start_line", "comment_char"},
-        "TXT": {"delimiter", "header_line", "start_line"},
-        "JSON": {"info_key", "additional_key", "data_key"},
-        "NetCDF": {"group"}
-    }
-
-    required_fields = {
-        "CSV": {"delimiter", "header_line", "start_line"},
-        "TXT": {"delimiter", "header_line", "start_line"},
-        # No required fields for the other types as they're all optional
-    }
-
-    # Get the expected fields for the current file type
-    expected = expected_fields.get(file_type)
-    required = required_fields.get(file_type, set())
-
-    # Check for unexpected fields in the provided processing info
-    unexpected_fields = set(processing.keys()) - expected
-
-    if unexpected_fields:
-        raise ValueError(
-            "Unexpected fields in processing for"
-            f" {file_type}: {unexpected_fields}")
-
-    # Check for missing required fields
-    missing_required_fields = required - set(processing.keys())
-
-    if missing_required_fields:
-        raise ValueError(
-            f"Missing required fields in processing for "
-            f"{file_type}: {missing_required_fields}")
-
-    # If it passes all checks, return the validated processing info
-    return processing

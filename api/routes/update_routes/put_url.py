@@ -27,9 +27,6 @@ Update an existing URL resource in CKAN.
 - **notes**: Additional notes about the resource (optional).
 - **extras**: Additional metadata to be added to the resource package as
 extras (optional).
-- **mapping**: Mapping information for the dataset (optional).
-- **processing**: Processing information for the dataset, which varies based
-on the `file_type`.
 
 ### Example Payload
 ```json
@@ -41,10 +38,7 @@ on the `file_type`.
     "file_type": "CSV",
     "notes": "Additional notes about the resource.",
     "extras": {"key1": "value1", "key2": "value2"},
-    "mapping": {"field1": "mapping1", "field2": "mapping2"},
-    "processing": {
-        "delimiter": ",", "header_line": 1, "start_line": 2,
-        "comment_char": "#"}
+
 }
 """,
     responses={
@@ -101,8 +95,6 @@ async def update_url_resource(resource_id: str,
             file_type=data.file_type,
             notes=data.notes,
             extras=data.extras,
-            mapping=data.mapping,
-            processing=data.processing
         )
         return {"message": "Resource updated successfully"}
     except KeyError as e:

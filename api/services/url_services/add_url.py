@@ -14,9 +14,7 @@ def add_url(resource_name,
             resource_url,
             file_type="",
             notes="",
-            extras=None,
-            mapping=None,
-            processing=None):
+            extras=None):
     """
     Add a URL resource to CKAN.
 
@@ -76,12 +74,6 @@ def add_url(resource_name,
             'url', resource_name, staging_params)
         extras['staging_socket'] = dxspaces_settings.dxspaces_url
         extras['staging_handle'] = staging_handle.model_dump_json()
-
-    if mapping:
-        url_extras['mapping'] = json.dumps(mapping)
-
-    if processing:
-        url_extras['processing'] = json.dumps(processing)
 
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(url_extras)

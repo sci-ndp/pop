@@ -46,14 +46,6 @@ router = APIRouter()
         '        "key1": "value1",\n'
         '        "key2": "value2"\n'
         '    },\n'
-        '    "mapping": {\n'
-        '        "field1": "mapping1",\n'
-        '        "field2": "mapping2"\n'
-        '    },\n'
-        '    "processing": {\n'
-        '        "data_key": "data",\n'
-        '        "info_key": "info"\n'
-        '    }\n'
         "}\n"
     ),
     responses={
@@ -115,8 +107,6 @@ async def create_kafka_datasource(
             kafka_port=data.kafka_port,
             dataset_description=data.dataset_description,
             extras=data.extras,
-            mapping=data.mapping,
-            processing=data.processing
         )
         return {"id": dataset_id}
     except Exception as e:

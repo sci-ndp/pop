@@ -5,7 +5,7 @@ from api.config.ckan_settings import ckan_settings
 
 RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources',
-    'collection', 'host', 'port', 'topic', 'mapping', 'processing'}
+    'collection', 'host', 'port', 'topic'}
 
 
 def update_kafka(
@@ -18,8 +18,6 @@ def update_kafka(
     kafka_port: Optional[str] = None,
     dataset_description: Optional[str] = None,
     extras: Optional[dict] = None,
-    mapping: Optional[dict] = None,
-    processing: Optional[dict] = None
 ):
     ckan = ckan_settings.ckan
 
@@ -45,14 +43,7 @@ def update_kafka(
                 "Extras contain reserved keys: "
                 f"{RESERVED_KEYS.intersection(extras)}")
         current_extras.update(extras)
-
-    # Update mapping, processing, and Kafka-specific extras
-    if mapping:
-        current_extras['mapping'] = json.dumps(mapping)
-
-    if processing:
-        current_extras['processing'] = json.dumps(processing)
-
+        
     if kafka_host or kafka_port or kafka_topic:
         current_extras['host'] = kafka_host or current_extras.get('host')
         current_extras['port'] = kafka_port or current_extras.get('port')

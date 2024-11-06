@@ -156,8 +156,6 @@ async def create_url_resource(
             file_type=data.file_type,
             notes=data.notes,
             extras=data.extras,
-            mapping=data.mapping,
-            processing=data.processing
         )
         return {"id": resource_id}
     except KeyError as e:

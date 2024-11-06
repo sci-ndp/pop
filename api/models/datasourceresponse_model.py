@@ -94,15 +94,7 @@ class DataSourceResponse(BaseModel):
             "example": {
                 "key1": "value1",
                 "key2": "value2",
-                "mapping": {
-                    "field1": "qeadw2",
-                    "field2": "gw4aw34",
-                    "time": "gw4aw34",
-                },
-                "processing": {
-                    "data_key": "",
-                    "info_key": "key_with_info",
-                },
+                "key3": "value3",
             },
         },
     )

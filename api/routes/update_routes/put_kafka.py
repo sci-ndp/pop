@@ -81,8 +81,6 @@ async def update_kafka_datasource(
             kafka_port=data.kafka_port,
             dataset_description=data.dataset_description,
             extras=data.extras,
-            mapping=data.mapping,
-            processing=data.processing
         )
         if not updated:
             raise HTTPException(
