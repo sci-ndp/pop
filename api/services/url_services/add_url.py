@@ -1,5 +1,5 @@
 import json
-from api.config import ckan_settings, dxspaces_settings
+from api.config import ckan_settings
 
 
 # Define a set of reserved keys that should not be used in the extras
@@ -67,13 +67,6 @@ def add_url(resource_name,
         "file_type": file_type
     }
 
-    if dxspaces_settings.registration_methods['url'] and file_type == "NetCDF":
-        dxspaces = dxspaces_settings.dxspaces
-        staging_params = {'url': resource_url}
-        staging_handle = dxspaces.Register(
-            'url', resource_name, staging_params)
-        extras['staging_socket'] = dxspaces_settings.dxspaces_url
-        extras['staging_handle'] = staging_handle.model_dump_json()
 
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(url_extras)
