@@ -52,4 +52,3 @@ class URLUpdateRequest(BaseModel):
             "package as extras."),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )
-    

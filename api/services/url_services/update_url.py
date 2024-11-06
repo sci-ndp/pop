@@ -33,7 +33,6 @@ async def update_url(
     # Extract current file type and processing from the resource
     current_extras = {
         extra['key']: extra['value'] for extra in resource.get('extras', [])}
-    current_file_type = current_extras.get("file_type") 
 
     # Preserve existing resource fields
     updated_data = {

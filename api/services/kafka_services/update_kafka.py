@@ -42,7 +42,7 @@ def update_kafka(
             raise KeyError(
                 "Extras contain reserved keys: "
                 f"{RESERVED_KEYS.intersection(extras)}")
-        current_extras.update(extras)  
+        current_extras.update(extras)
 
     if kafka_host or kafka_port or kafka_topic:
         current_extras['host'] = kafka_host or current_extras.get('host')
