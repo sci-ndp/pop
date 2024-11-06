@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from enum import Enum
-from typing import  Dict, Optional
+from typing import Dict, Optional
 
 
 # Define an enumeration for file types
