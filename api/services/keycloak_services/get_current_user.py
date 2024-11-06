@@ -2,7 +2,9 @@ from fastapi import Depends, HTTPException, status
 from typing import Optional
 
 from . import oauth2_scheme
+from ...config.keycloak_settings import keycloak_settings
 from .get_user_info_from_token import get_user_info_from_token
+from .get_user_info_from_test import get_user_info_from_test
 
 
 def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
@@ -22,13 +24,16 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    try:
-        # Get the user information using the provided token
-        user = get_user_info_from_token(token)
-    except Exception:
-        # Raise the credentials exception if an error occurs while getting the
-        # user information
-        raise credentials_exception
+    if token == keycloak_settings.test_username:
+        user = get_user_info_from_test()
+    else:
+        try:
+            # Get the user information using the provided token
+            user = get_user_info_from_token(token)
+        except Exception:
+            # Raise the credentials exception if an error occurs while
+            # getting the user information
+            raise credentials_exception
 
     # Check if the user information contains an error
     if 'error' in user:
