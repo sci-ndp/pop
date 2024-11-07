@@ -3,39 +3,18 @@ from typing import List, Optional, Literal
 from api.services import datasource_services
 from api.models import DataSourceResponse
 
-
 router = APIRouter()
 
 
 @router.get(
     "/search",
     response_model=List[DataSourceResponse],
-    summary="Search data sources",
+    summary="Search datasets by terms",
     description=(
-        "Search datasets by various parameters.\n\n"
-        "### Common registration-matching parameters\n"
-        "- **dataset_name**: the name of the dataset\n"
-        "- **dataset_title**: the title of the dataset\n"
-        "- **owner_org**: the name of the organization\n"
-        "- **resource_url**: the URL of the dataset resource\n"
-        "- **resource_name**: the name of the dataset resource\n"
-        "- **dataset_description**: the description of the dataset\n"
-        "- **resource_description**: the description of the dataset resource\n"
-        "- **resource_format**: the format of the dataset resource\n\n"
-        "### User-defined value search parameters\n"
-        "- **search_term**: a comma-separated list of terms to search across"
-        " all fields\n"
-        "- **timestamp**: a filter on the `timestamp` field of results."
-        " Timestamp can have one of two formats:\n\n"
-        "    `[<>]?YYYY(-MM(-DD(THH(:mm(:ss)))))` - the closeset timestamp"
-        " value to that which is provided. `>` (**default**) indicates the"
-        " closest in the future, while `<` indicates the closest"
-        " in the past.\n"
-        "    `(YYYY(-MM(-DD(THH(:mm(:ss))))))?/YYYY(-MM(-DD(THH(:mm(:ss)))))` "
-        "- filter results to the specified time interval. A missing timestamp"
-        " indicates an open interval.\n"
-        "### Unused parameters\n"
-        "- **server** - one of `local` or `global`"
+        "Search CKAN datasets by providing a list of terms.\n\n"
+        "### Parameters\n"
+        "- **terms**: A list of terms to search for in the datasets.\n"
+        "- **server**: Specify the server to search on: 'local' or 'global'."
     ),
     responses={
         200: {
@@ -79,58 +58,23 @@ router = APIRouter()
         }
     }
 )
-async def search_datasource(
-    dataset_name: Optional[str] = Query(
-        None, description="The name of the dataset."),
-    dataset_title: Optional[str] = Query(
-        None, description="The title of the dataset."),
-    owner_org: Optional[str] = Query(
-        None, description="The name of the organization."),
-    resource_url: Optional[str] = Query(
-        None, description="The URL of the dataset resource."),
-    resource_name: Optional[str] = Query(
-        None, description="The name of the dataset resource."),
-    dataset_description: Optional[str] = Query(
-        None, description="The description of the dataset."),
-    resource_description: Optional[str] = Query(
-        None, description="The description of the dataset resource."),
-    resource_format: Optional[str] = Query(
-        None, description="The format of the dataset resource."),
-    search_term: Optional[str] = Query(
-        None, description="A term to search across all fields."),
-    timestamp: Optional[str] = Query(
-        None, description="A time range term to filter results."),
+async def search_datasets(
+    terms: List[str] = Query(
+        ...,
+        description="A list of terms to search for in the datasets."
+    ),
     server: Optional[Literal['local', 'global']] = Query(
         'local',
         description="Specify the server to search on: 'local' or 'global'."
     )
 ):
     """
-    Endpoint to search by various parameters.
+    Endpoint to search datasets by a list of terms.
 
     Parameters
     ----------
-    dataset_name : Optional[str]
-        The name of the dataset.
-    dataset_title : Optional[str]
-        The title of the dataset.
-    owner_org : Optional[str]
-        The name of the organization.
-    resource_url : Optional[str]
-        The URL of the dataset resource.
-    resource_name : Optional[str]
-        The name of the dataset resource.
-    dataset_description : Optional[str]
-        The description of the dataset.
-    resource_description : Optional[str]
-        The description of the dataset resource.
-    resource_format : Optional[str]
-        The format of the dataset resource.
-    search_term : Optional[str]
-        A term to search across all fields. Multiple values can be provided,
-        separated by commas.
-    timestamp: Optional[str]
-        A time range term to filter results.
+    terms : List[str]
+        A list of terms to search for in the datasets.
     server : Optional[str]
         Specify the server to search on: 'local' or 'global'.
 
@@ -146,18 +90,8 @@ async def search_datasource(
         raised with a detailed message.
     """
     try:
-        results = await datasource_services.search_datasource(
-            dataset_name=dataset_name,
-            dataset_title=dataset_title,
-            owner_org=owner_org,
-            resource_url=resource_url,
-            resource_name=resource_name,
-            dataset_description=dataset_description,
-            resource_description=resource_description,
-            resource_format=resource_format.lower()
-            if resource_format else None,
-            search_term=search_term,
-            timestamp=timestamp,
+        results = await datasource_services.search_datasets_by_terms(
+            terms_list=terms,
             server=server
         )
         return results
