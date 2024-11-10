@@ -6,7 +6,7 @@ services:
     working_dir: /code
     container_name: pop-api
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./api:/code/api
       - ./env_variables:/code/env_variables
