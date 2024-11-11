@@ -1,0 +1,41 @@
+.card-header-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ffffff;
+    padding: 0.5rem 0.5rem;
+    /* Ensures titles have the same height */
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.card-title-custom {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+}
+.card-body-custom {
+    padding-top: 0;
+    font-size: 3rem;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.card-square {
+    width: 12rem;
+    height: 8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    margin-right: 0.3rem;
+}
+#map {
+    height: 500px;
+    width: 100%;
+}
+.leaflet-marker-icon {
+    z-index: 1000;
+}

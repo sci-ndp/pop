@@ -12,6 +12,7 @@ services:
       - ./env_variables:/code/env_variables
       - ./requirements.txt:/code/requirements.txt
       - ./tests:/code/tests
+      - ./static:/code/static
     environment:
       - PYTHONPATH=/code
     networks:
