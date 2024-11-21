@@ -1,1 +1,1 @@
-from .run_jupyterhub import create_jupyterhub
+from .run_jupyterhub import run_jupyterhub
