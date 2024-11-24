@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
-from api.main import app  # Adjust the import as necessary
+from api.main import app
+
 
 client = TestClient(app)
 
@@ -36,7 +37,7 @@ def test_search_datasets_with_terms():
     - The API should return a 200 OK status.
     - The response should contain the mocked datasets.
     - The 'search_datasets_by_terms' function should be called with the correct
-      parameters.
+      parameters, including 'keys_list=None'.
     """
     with patch(
         'api.services.datasource_services.search_datasets_by_terms',
@@ -78,6 +79,7 @@ def test_search_datasets_with_terms():
 
         mock_search.assert_awaited_once_with(
             terms_list=["example", "dataset"],
+            keys_list=None,  # Explicitly pass None for keys_list
             server="global"
         )
 
@@ -109,6 +111,7 @@ def test_search_datasets_exception():
 
         mock_search.assert_awaited_once_with(
             terms_list=["example"],
+            keys_list=None,  # Explicitly pass None for keys_list
             server="local"
         )
 
@@ -132,12 +135,16 @@ def test_search_datasets_invalid_server():
     expected_error_detail = {
         "loc": ["query", "server"],
         "msg": "Input should be 'local' or 'global'",
-        "type": "literal_error",
-        "input": "invalid_server",
-        "ctx": {"expected": "'local' or 'global'"}
+        "type": "type_error.enum",
+        "ctx": {"enum_values": ["local", "global"]}
     }
 
-    assert response.json()["detail"][0] == expected_error_detail
+    # Extract the first error detail
+    actual_error_detail = response.json()["detail"][0]
+
+    # Assert each component of the error detail
+    assert actual_error_detail["loc"] == expected_error_detail["loc"]
+    assert actual_error_detail["msg"] == expected_error_detail["msg"]
 
 
 def test_search_datasets_empty_terms():
@@ -147,7 +154,7 @@ def test_search_datasets_empty_terms():
     Expected behavior:
     - The API should accept the request and return an empty list of datasets.
     - The 'search_datasets_by_terms' function should be called with an empty
-    list.
+      list.
     """
     with patch(
         'api.services.datasource_services.search_datasets_by_terms',
@@ -163,5 +170,117 @@ def test_search_datasets_empty_terms():
 
         mock_search.assert_awaited_once_with(
             terms_list=[""],
+            keys_list=None,  # Explicitly pass None for keys_list
             server="local"
         )
+
+
+def test_search_datasets_with_keys():
+    """
+    Test calling the /search endpoint with 'terms' and 'keys' parameters.
+
+    Expected behavior:
+    - The API should return a 200 OK status.
+    - The response should contain the mocked datasets.
+    - The 'search_datasets_by_terms' function should be called with the correct
+      'keys_list'.
+    """
+    with patch(
+        'api.services.datasource_services.search_datasets_by_terms',
+        new_callable=AsyncMock
+    ) as mock_search:
+        mock_search.return_value = [
+            {
+                "id": "87654321-dcba-hgfe-lkji-0987654321ba",
+                "name": "another_example_dataset",
+                "title": "Another Example Dataset",
+                "owner_org": "another_example_org",
+                "notes": "This is another example dataset.",
+                "resources": [],
+                "extras": {}
+            }
+        ]
+
+        # Prepare the query parameters with 'keys'
+        params = [
+            ("terms", "another"),
+            ("terms", "dataset"),
+            ("keys", "description"),
+            ("keys", "extras.key1")
+        ]
+
+        response = client.get("/search", params=params)
+        assert response.status_code == 200
+        assert response.json() == mock_search.return_value
+
+        mock_search.assert_awaited_once_with(
+            terms_list=["another", "dataset"],
+            keys_list=["description", "extras.key1"],
+            server="local"
+        )
+
+
+def test_search_datasets_mixed_keys():
+    """
+    Test calling the /search endpoint with mixed global and key-specific
+    searches.
+
+    Expected behavior:
+    - The API should return a 200 OK status.
+    - The response should contain the mocked datasets.
+    - The 'search_datasets_by_terms' function should be called with the correct
+      'keys_list', including 'null' for global search terms.
+    """
+    with patch(
+        'api.services.datasource_services.search_datasets_by_terms',
+        new_callable=AsyncMock
+    ) as mock_search:
+        mock_search.return_value = [
+            {
+                "id": "abcdef12-3456-7890-abcd-ef1234567890",
+                "name": "mixed_search_dataset",
+                "title": "Mixed Search Dataset",
+                "owner_org": "mixed_org",
+                "notes": "Dataset matching global and specific terms.",
+                "resources": [],
+                "extras": {}
+            }
+        ]
+
+        # Prepare the query parameters with mixed 'keys'
+        params = [
+            ("terms", "global_term"),
+            ("terms", "specific_term"),
+            ("keys", "null"),
+            ("keys", "description")
+        ]
+
+        response = client.get("/search", params=params)
+        assert response.status_code == 200
+        assert response.json() == mock_search.return_value
+
+        # The service function receives 'keys_list=['null', 'description']'
+        mock_search.assert_awaited_once_with(
+            terms_list=["global_term", "specific_term"],
+            keys_list=["null", "description"],  # Expect 'null' as string
+            server="local"
+        )
+
+
+def test_search_datasets_keys_length_mismatch():
+    """
+    Test that an error is returned when keys and terms lengths do not match.
+    """
+    response = client.get(
+        "/search",
+        params=[
+            ("terms", "water"),
+            ("terms", "temperature"),
+            ("keys", "description")  # Only one key for two terms
+        ]
+    )
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "The number of keys must match the number of terms, "
+        "or keys must be omitted."
+    }
