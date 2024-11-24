@@ -14,6 +14,8 @@ router = APIRouter()
         "Search CKAN datasets by providing a list of terms.\n\n"
         "### Parameters\n"
         "- **terms**: A list of terms to search for in the datasets.\n"
+        "- **keys**: An optional list specifying the keys to search each "
+        "term.\n"
         "- **server**: Specify the server to search on: 'local' or 'global'."
     ),
     responses={
@@ -55,6 +57,16 @@ router = APIRouter()
                     }
                 }
             }
+        },
+        422: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Validation error details"
+                    }
+                }
+            }
         }
     }
 )
@@ -63,19 +75,30 @@ async def search_datasets(
         ...,
         description="A list of terms to search for in the datasets."
     ),
-    server: Optional[Literal['local', 'global']] = Query(
+    keys: Optional[List[Optional[str]]] = Query(
+        None,
+        description=(
+            "An optional list of keys corresponding to each term. "
+            "Use `null` for global search of the term."
+        )
+    ),
+    server: Literal['local', 'global'] = Query(
         'local',
         description="Specify the server to search on: 'local' or 'global'."
     )
 ):
     """
-    Endpoint to search datasets by a list of terms.
+    Endpoint to search datasets by a list of terms with optional key
+    specifications.
 
     Parameters
     ----------
     terms : List[str]
         A list of terms to search for in the datasets.
-    server : Optional[str]
+    keys : Optional[List[Optional[str]]]
+        An optional list specifying the keys to search each term. Use `null`
+        for global search of the term.
+    server : Literal['local', 'global']
         Specify the server to search on: 'local' or 'global'.
 
     Returns
@@ -86,14 +109,24 @@ async def search_datasets(
     Raises
     ------
     HTTPException
-        If there is an error searching for the datasets, an HTTPException is
-        raised with a detailed message.
+        If there is an error searching for the datasets or validation fails.
     """
+    if keys is not None and len(keys) != len(terms):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "The number of keys must match the number of terms, or keys "
+                "must be omitted.")
+        )
+
     try:
         results = await datasource_services.search_datasets_by_terms(
             terms_list=terms,
+            keys_list=keys,
             server=server
         )
         return results
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
