@@ -1,31 +1,17 @@
-import os
-import subprocess
+import requests
 from fastapi import HTTPException
 
 def run_jupyterhub():
     """
-    Runs JupyterHub using the existing configuration and Docker setup.
+    Sends a request to the running JupyterHub instance to validate it is active.
     :return: Success message.
     """
     try:
-        # Ensure the JupyterHub configuration file and Dockerfile are present
-        config_path = "JupyterHub_Docker/jupyterhub_config.py"
-        docker_compose_path = "JupyterHub_Docker/docker-compose.yaml"
-        
-        if not os.path.exists(config_path):
-            raise HTTPException(status_code=500, detail="JupyterHub configuration file is missing.")
-        if not os.path.exists(docker_compose_path):
-            raise HTTPException(status_code=500, detail="Docker Compose file is missing.")
-
-        # Start the JupyterHub instance using docker-compose
-        subprocess.run(
-            ["docker-compose", "-f", docker_compose_path, "up", "-d"],
-            check=True
-        )
-
-        return {"message": "JupyterHub instance started successfully."}
-
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start JupyterHub: {e}")
+        # Ping the JupyterHub server running in Docker
+        response = requests.get("http://jupyterhub:8002/hub/spawn")
+        if response.status_code == 200:
+            return {"message": "JupyterHub is running and accessible."}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to connect to JupyterHub.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error connecting to JupyterHub: {str(e)}")

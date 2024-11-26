@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  api:
+    image: python:3.9
+    working_dir: /code
+    container_name: pop-api
+    ports:
+      - "8001:8000"  # Exposes FastAPI on localhost:8001
+    volumes:
+      - ./api:/code/api
+      - ./env_variables:/code/env_variables
+      - ./requirements.txt:/code/requirements.txt
+      - ./tests:/code/tests
+      - ./static:/code/static
+    environment:
+      - PYTHONPATH=/code
+    networks:
+      - pop-network
+    entrypoint: >
+      /bin/bash -c
+      "pip install --no-cache-dir --upgrade -r /code/requirements.txt &&
+      uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --workers 5"
+
+  jupyterhub:
+    build:
+      context: ./api/services/jupyterhub_services/JupyterHub_Docker
+      dockerfile: Dockerfile
+    container_name: jupyterhub
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./env_variables/.env_jupyterhub
+    volumes:
+      - "./api/services/jupyterhub_services/JupyterHub_Docker/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      - "jupyterhub:/data"
+    networks:
+      - pop-network
+
+networks:
+  pop-network:
+    driver: bridge
+
+volumes:
+  jupyterhub:
