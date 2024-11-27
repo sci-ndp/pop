@@ -2,6 +2,8 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import OAuth2PasswordBearer
 
 import api.routes as routes
 from api.config import swagger_settings
@@ -34,4 +36,57 @@ app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
 
 
+# Custom OpenAPI Schema for Swagger
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+
+
+def custom_openapi():
+    """
+    Customize the OpenAPI schema to support both username/password
+    and token-based authentication.
+    """
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Define security schemes for OAuth2 Password and Bearer Token
+    openapi_schema["components"]["securitySchemes"] = {
+        "OAuth2Password": {
+            "type": "oauth2",
+            "flows": {
+                "password": {
+                    "tokenUrl": "/token",
+                    "scopes": {},
+                }
+            },
+        },
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+
+    # Apply both security schemes globally to all endpoints
+    for path in openapi_schema["paths"].values():
+        for method in path.values():
+            method["security"] = [
+                {"OAuth2Password": []},  # Username/password authentication
+                {"BearerAuth": []},  # Token authentication
+            ]
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+# Set the custom OpenAPI schema
+app.openapi = custom_openapi
+
+# Configure logger
 logger = logging.getLogger(__name__)
