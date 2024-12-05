@@ -26,9 +26,12 @@ services:
     build:
       context: ./api/services/jupyterhub_services/JupyterHub_Docker
       dockerfile: Dockerfile
+      args:
+        JUPYTERHUB_VERSION: latest
     container_name: jupyterhub
+    restart: always
     ports:
-      - "8002:8002"
+      - 8002:8002
     env_file:
       - ./env_variables/.env_jupyterhub
     volumes:
@@ -41,6 +44,7 @@ services:
 networks:
   pop-network:
     driver: bridge
+    name: pop-network
 
 volumes:
   jupyterhub:
