@@ -32,6 +32,7 @@ app.include_router(routes.update_router, tags=["Update"])
 app.include_router(routes.delete_router, tags=["Delete"])
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
+app.include_router(routes.jhub_router, tags=["Jupyterhub"])
 
 
 logger = logging.getLogger(__name__)

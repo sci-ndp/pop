@@ -35,9 +35,6 @@ proxy_port = os.environ["JUPYTERHUB_PROXY_PORT"]
 # c.JupyterHub.bind_url = f'http://127.0.0.1:{proxy_port}'
 c.JupyterHub.bind_url = f"http://:{proxy_port}"
 
-# Set the base URL for JupyterHub
-c.JupyterHub.base_url = "http://ip-10-244-2-233.chpc.utah.edu:8001/jupyterhub""
-
 # Explicitly set notebook directory because we'll be mounting a volume to it.
 # Most `jupyter/docker-stacks` *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.

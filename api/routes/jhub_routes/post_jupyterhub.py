@@ -3,7 +3,6 @@ import requests
 from fastapi.responses import Response, JSONResponse, HTMLResponse, PlainTextResponse
 from fastapi import APIRouter, HTTPException, Request
 from starlette.responses import RedirectResponse
-from api.services.jupyterhub_services.check_jupyterhub import check_jupyterhub
 
 
 router = APIRouter()
@@ -59,18 +58,3 @@ async def proxy_to_jupyterhub(request: Request, path: str = ""):
     except httpx.RequestError as exc:
         print(f"Error forwarding request to JupyterHub: {exc}")
         return JSONResponse({"error": "Unable to connect to JupyterHub"}, status_code=502)
-
-
-
-
-@router.get("/jupyterhub/status")
-def jupyterhub_status():
-    """
-    Return JupyterHub status.
-    """
-    try:
-        result = check_jupyterhub()
-        return result
-    except HTTPException as e:
-        print(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
