@@ -106,7 +106,7 @@ async def search_datasets_by_terms(
             # If you want to require all terms, use `all()`.
             # If you want at least one term, use `any()`.
             if all(term.lower() in dataset_str for term in terms_list):
-                
+
                 resources_list = [
                     Resource(
                         id=res['id'],
