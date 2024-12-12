@@ -19,6 +19,7 @@ def escape_solr_special_chars(value: str) -> str:
     # Compile a regex that matches any special character that Solr requires
     # escaping.
     pattern = re.compile(r'([+\-\!\(\)\{\}\[\]\^"~\*\?:\\])')
+    # pattern = re.compile(r'([+\!\(\)\{\}\[\]\^~\*\?:\\])')
     # Replace each found character with a backslash-escaped version.
     return pattern.sub(r'\\\1', value)
 
@@ -98,49 +99,57 @@ async def search_datasets_by_terms(
 
         # Process each returned dataset into the response model.
         for dataset in datasets['results']:
-            resources_list = [
-                Resource(
-                    id=res['id'],
-                    url=res['url'],
-                    name=res['name'],
-                    description=res.get('description'),
-                    format=res.get('format')
+            # Convert the entire dataset dict to a string
+            dataset_str = json.dumps(dataset).lower()
+
+            # Check if all terms appear in the dataset string
+            # If you want to require all terms, use `all()`.
+            # If you want at least one term, use `any()`.
+            if all(term.lower() in dataset_str for term in terms_list):
+                
+                resources_list = [
+                    Resource(
+                        id=res['id'],
+                        url=res['url'],
+                        name=res['name'],
+                        description=res.get('description'),
+                        format=res.get('format')
+                    )
+                    for res in dataset.get('resources', [])
+                ]
+
+                organization_name = dataset.get('organization', {}).get('name') \
+                    if dataset.get('organization') else None
+
+                extras = {
+                    extra['key']: extra['value']
+                    for extra in dataset.get('extras', [])
+                }
+
+                # Attempt to parse JSON in 'mapping' and 'processing' extras.
+                if 'mapping' in extras:
+                    try:
+                        extras['mapping'] = json.loads(extras['mapping'])
+                    except json.JSONDecodeError:
+                        pass
+
+                if 'processing' in extras:
+                    try:
+                        extras['processing'] = json.loads(extras['processing'])
+                    except json.JSONDecodeError:
+                        pass
+
+                results_list.append(
+                    DataSourceResponse(
+                        id=dataset['id'],
+                        name=dataset['name'],
+                        title=dataset['title'],
+                        owner_org=organization_name,
+                        description=dataset.get('notes'),
+                        resources=resources_list,
+                        extras=extras
+                    )
                 )
-                for res in dataset.get('resources', [])
-            ]
-
-            organization_name = dataset.get('organization', {}).get('name') \
-                if dataset.get('organization') else None
-
-            extras = {
-                extra['key']: extra['value']
-                for extra in dataset.get('extras', [])
-            }
-
-            # Attempt to parse JSON in 'mapping' and 'processing' extras.
-            if 'mapping' in extras:
-                try:
-                    extras['mapping'] = json.loads(extras['mapping'])
-                except json.JSONDecodeError:
-                    pass
-
-            if 'processing' in extras:
-                try:
-                    extras['processing'] = json.loads(extras['processing'])
-                except json.JSONDecodeError:
-                    pass
-
-            results_list.append(
-                DataSourceResponse(
-                    id=dataset['id'],
-                    name=dataset['name'],
-                    title=dataset['title'],
-                    owner_org=organization_name,
-                    description=dataset.get('notes'),
-                    resources=resources_list,
-                    extras=extras
-                )
-            )
 
         return results_list
 
