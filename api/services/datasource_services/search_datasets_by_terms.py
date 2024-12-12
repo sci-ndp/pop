@@ -118,7 +118,8 @@ async def search_datasets_by_terms(
                     for res in dataset.get('resources', [])
                 ]
 
-                organization_name = dataset.get('organization', {}).get('name') \
+                organization_name = dataset.get(
+                    'organization', {}).get('name') \
                     if dataset.get('organization') else None
 
                 extras = {
