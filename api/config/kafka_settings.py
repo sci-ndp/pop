@@ -21,4 +21,5 @@ class KafkaSettings(BaseSettings):
         "extra": "allow",
     }
 
+
 kafka_settings = KafkaSettings()

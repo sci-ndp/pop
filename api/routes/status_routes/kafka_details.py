@@ -31,4 +31,6 @@ async def get_kafka_details():
             "kafka_connection": kafka_settings.kafka_connection,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving Kafka details: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving Kafka details: {str(e)}")
