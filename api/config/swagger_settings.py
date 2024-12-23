@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     swagger_title: str = "API Documentation"
     swagger_description: str = "This is the API documentation."
-    swagger_version: str = "0.2.0"
+    swagger_version: str = "0.3.0"
     public: bool = True
 
     model_config = {
