@@ -1,3 +1,5 @@
+# api/config/ckan_settings.py
+
 from pydantic_settings import BaseSettings
 from ckanapi import RemoteCKAN
 
