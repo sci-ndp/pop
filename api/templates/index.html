@@ -6,29 +6,30 @@
 <!-- Dashboard Header -->
 <div class="row">
     <div class="col-md-12">
-        <h1 class="text-center">{{ title }} v{{ version }}</h1>
+        <h1>{{ title }} v{{ version }}</h1>
         
         {% if status == "CKAN and Keycloak are active and reachable." %}
-            <p class="lead text-success text-center">
+            <p class="lead text-success">
                 <i class="fas fa-check-circle"></i> The system is operating correctly without any issues
             </p>
         
-        {% elif status == "CKAN is active, but Keycloak is not reachable." %}
-            <p class="lead text-success text-center">
-                <i class="fas fa-check-circle"></i> CKAN is active
-            </p>
-            <p class="lead text-danger text-center">
-                <i class="fas fa-times-circle"></i> Keycloak is not reachable
-            </p>
+        <ul class="list-unstyled compact-list">
+            {% elif status == "CKAN is active, but Keycloak is not reachable." %}
+                <p class="lead text-success">
+                    <i class="fas fa-check-circle"></i> - CKAN is active
+                </p>
+                <p class="lead text-danger">
+                    <i class="fas fa-times-circle"></i> - Keycloak is not reachable
+                </p>
 
-        {% elif status == "Keycloak is active, but CKAN is not reachable." %}
-            <p class="lead text-success text-center">
-                <i class="fas fa-check-circle"></i> Keycloak is active
-            </p>
-            <p class="lead text-danger text-center">
-                <i class="fas fa-times-circle"></i> CKAN is not reachable
-            </p>
-        
+            {% elif status == "Keycloak is active, but CKAN is not reachable." %}
+                <p class="lead text-success">
+                    <i class="fas fa-check-circle"></i> - Keycloak is active
+                </p>
+                <p class="lead text-danger">
+                    <i class="fas fa-times-circle"></i> - CKAN is not reachable
+                </p>
+        </ul>
         {% elif status == "CKAN and Keycloak are not reachable." %}
             <p class="lead text-danger text-center">
                 <i class="fas fa-times-circle"></i> CKAN and Keycloak are not reachable
@@ -41,4 +42,24 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Kafka Details Section -->
+{% if kafka_info.kafka_connection %}
+<div class="row mt-4 d-flex justify-content-center">
+    <div class="card card-square shadow-sm">
+        <div class="card-header card-header-custom">
+            <h5 class="card-title-custom">Kafka Connection</h5>
+        </div>
+        <div class="card-body card-body-custom">
+            <p style="font-size: 15px;"><strong>Host:</strong> {{ kafka_info.kafka_host }}</p>
+            <p style="font-size: 15px;"><strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+
+
+
 {% endblock %}

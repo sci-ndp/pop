@@ -14,13 +14,12 @@
     margin-bottom: 0;
 }
 .card-body-custom {
-    padding-top: 0;
-    font-size: 3rem;
+    padding-top: 1rem;
+    font-size: 1rem;
     text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
+    display: block;
+    height: auto;
+    line-height: 1.5;
 }
 .card-square {
     width: 12rem;
@@ -38,4 +37,8 @@
 }
 .leaflet-marker-icon {
     z-index: 1000;
+}
+
+.list-unstyled li {
+    margin-bottom: 0.01rem; /* Ajusta el valor según necesites */
 }
