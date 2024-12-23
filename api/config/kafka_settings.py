@@ -16,9 +16,9 @@ class KafkaSettings(BaseSettings):
             "kafka_port": self.kafka_port,
         }
 
-    class Config:
-        env_file = "./env_variables/.env_kafka"
-        extra = "allow"
-
+    model_config = {
+        "env_file": "./env_variables/.env_kafka",
+        "extra": "allow",
+    }
 
 kafka_settings = KafkaSettings()
