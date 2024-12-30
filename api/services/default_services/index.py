@@ -43,6 +43,10 @@ def index(request: Request):
         "kafka_port": kafka_settings.kafka_port,
         "kafka_connection": kafka_settings.kafka_connection,
     }
+    
+    # Add JupyterLab settings to context
+    use_jupyterlab = swagger_settings.use_jupyterlab
+    jupyter_url = swagger_settings.jupyter_url if use_jupyterlab else None
 
     return templates.TemplateResponse(
         request=request,
