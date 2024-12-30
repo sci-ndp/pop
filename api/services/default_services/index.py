@@ -56,6 +56,8 @@ def index(request: Request):
             "version": swagger_settings.swagger_version,
             "docs_url": f"{request.base_url}docs",
             "status": status,
-            "kafka_info": kafka_info
+            "kafka_info": kafka_info,
+            "use_jupyterlab": use_jupyterlab,
+            "jupyter_url": jupyter_url
         }
     )

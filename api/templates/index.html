@@ -20,7 +20,7 @@
                 <p class="lead text-success">
                     <i class="fas fa-check-circle"></i> - CKAN is active
                 </p>
-                <p class="lead text-danger">
+                <p class="lead text-danger" style="height: 49px; transform: translate(0px, -19px);">
                     <i class="fas fa-times-circle"></i> - Keycloak is not reachable
                 </p>
 
@@ -28,7 +28,7 @@
                 <p class="lead text-success">
                     <i class="fas fa-check-circle"></i> - Keycloak is active
                 </p>
-                <p class="lead text-danger">
+                <p class="lead text-danger" style="height: 49px; transform: translate(0px, -19px);">
                     <i class="fas fa-times-circle"></i> - CKAN is not reachable
                 </p>
         </ul>
@@ -45,23 +45,34 @@
     </div>
 </div>
 
-<!-- Kafka Details Section -->
-{% if kafka_info.kafka_connection %}
+<!-- Extras Section -->
 <div class="row mt-4 d-flex justify-content-center">
+    <!-- Kafka -->
+    {% if kafka_info.kafka_connection %}
     <div class="card card-square shadow-sm">
         <div class="card-header card-header-custom">
             <h5 class="card-title-custom">Kafka Connection</h5>
         </div>
         <div class="card-body card-body-custom">
             <p style="font-size: 15px;"><strong>Host:</strong> {{ kafka_info.kafka_host }}</p>
-            <p style="font-size: 15px;"><strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
+            <p style="font-size: 15px font-size: 15px; height: 21.5px; transform: translate(0px, -14px);"><strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
         </div>
     </div>
+    {% endif %}
+    <!-- Kafka -->
+    {% if use_jupyterlab %}
+    <div class="card card-square shadow-sm">
+        <div class="card-header card-header-custom">
+            <h5 class="card-title-custom">JupyterLab</h5>
+        </div>
+        <div class="card-body card-body-custom">
+            <a href="{{ jupyter_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer" style="height: 60px; transform: translate(0px, -9px);">
+                Access JupyterLab
+            </a>
+        </div>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
-
-
-
 
 
 {% endblock %}
