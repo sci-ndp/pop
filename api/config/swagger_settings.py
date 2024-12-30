@@ -1,3 +1,5 @@
+# api/config/swagger_settings.py
+
 from pydantic_settings import BaseSettings
 
 
