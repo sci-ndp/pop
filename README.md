@@ -35,6 +35,26 @@ This repository requires Docker and Docker Compose to be installed on your syste
 
 For detailed usage instructions and endpoint descriptions, refer to the API swagger documentation, accessible once the server is running at `/docs`.
 
+## Optional Integrations
+
+The POP API provides core functionalities for managing and interacting with POP resources. These core features include:
+
+- Managing and handling data within an internal CKAN instance.
+- Searching for data across the internal CKAN instance and external CKAN instances.
+- Authentication and authorization via Keycloak.
+
+In addition to these core capabilities, the POP API also supports optional configurations to connect with other services being developed in SciDx. These integrations are designed to enhance functionality but are not required for the basic operation of the API:
+
+1. **Kafka Integration**:  
+   Enables the POP API to connect with a Kafka broker for real-time data streaming. To configure this integration, use the `.env_kafka` file located in the `env_variables` directory.
+
+2. **JupyterLab Integration**:  
+   Adds a link to a JupyterLab instance on the main page of the API, enabling users to access it directly. To enable this integration, configure the following variables in the `env_variables/.env_swagger` file:
+   - `USE_JUPYTERLAB`: Set to `True` to enable the integration (default: `False`).
+   - `JUPYTER_URL`: Specify the URL of the JupyterLab instance to be linked.
+
+These optional features allow the POP API to seamlessly integrate with other components in SciDx, providing extended capabilities for specialized use cases.
+
 
 ## Running Tests
 

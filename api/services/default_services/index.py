@@ -44,6 +44,10 @@ def index(request: Request):
         "kafka_connection": kafka_settings.kafka_connection,
     }
 
+    # Add JupyterLab settings to context
+    use_jupyterlab = swagger_settings.use_jupyterlab
+    jupyter_url = swagger_settings.jupyter_url if use_jupyterlab else None
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -52,6 +56,8 @@ def index(request: Request):
             "version": swagger_settings.swagger_version,
             "docs_url": f"{request.base_url}docs",
             "status": status,
-            "kafka_info": kafka_info
+            "kafka_info": kafka_info,
+            "use_jupyterlab": use_jupyterlab,
+            "jupyter_url": jupyter_url
         }
     )
