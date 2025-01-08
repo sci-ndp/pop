@@ -121,15 +121,15 @@ async def create_kafka_datasource(
         )
         return {"id": dataset_id}
     except Exception as e:
-            if ("That URL is already in use" in str(e) or
-                "That name is already in use" in str(e)):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "error": "Duplicate Dataset",
-                        "detail": "A dataset with the given name or URL "
-                        "already exists."
-                    }
-                )
+        if "That URL is already in use" in str(e) \
+           or "That name is already in use" in str(e):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "Duplicate Dataset",
+                    "detail": "A dataset with the given name or URL "
+                    "already exists."
+                }
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
