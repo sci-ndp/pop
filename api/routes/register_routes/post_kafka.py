@@ -66,6 +66,20 @@ router = APIRouter()
                 }
             }
         },
+        409: {
+            "description": "Conflict - Duplicate dataset",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": {
+                            "error": "Duplicate Dataset",
+                            "detail": "A dataset with the given name or URL "
+                            "already exists."
+                        }
+                    }
+                }
+            }
+        },
         400: {
             "description": "Bad Request",
             "content": {
