@@ -1,3 +1,4 @@
+# tests/test_create_kafka_datasource.py
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
 from api.main import app
@@ -131,3 +132,37 @@ def test_create_kafka_datasource_validation_error():
 
     # Clean up the override
     app.dependency_overrides.pop(get_current_user, None)
+
+
+def test_create_kafka_datasource_duplicate_error():
+    # Mock del servicio para simular un error de duplicidad
+    with patch("api.services.kafka_services.add_kafka") as mock_add_kafka:
+        mock_add_kafka.side_effect = Exception(
+            '{"name": ["That name is already in use."]}'
+        )
+
+        # Mock del usuario autenticado
+        def mock_get_current_user():
+            return {"user": "test_user"}
+        app.dependency_overrides[get_current_user] = mock_get_current_user
+
+        data = {
+            "dataset_name": "duplicate_name",
+            "dataset_title": "Duplicate Name",
+            "owner_org": "test_org",
+            "kafka_topic": "test_topic",
+            "kafka_host": "localhost",
+            "kafka_port": "9092",
+            "dataset_description": "Test dataset"
+        }
+
+        # Ejecutamos el endpoint y verificamos la respuesta
+        response = client.post("/kafka", json=data)
+        assert response.status_code == 409
+        assert response.json() == {
+            "detail": {
+                "error": "Duplicate Dataset",
+                "detail": "A dataset with the given name or URL "
+                "already exists."
+            }
+        }

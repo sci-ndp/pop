@@ -1,3 +1,4 @@
+# api/routes/register_routes/post_kafka.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from api.services import kafka_services
 from api.models.request_kafka_model import KafkaDataSourceRequest
@@ -65,6 +66,20 @@ router = APIRouter()
                 }
             }
         },
+        409: {
+            "description": "Conflict - Duplicate dataset",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": {
+                            "error": "Duplicate Dataset",
+                            "detail": "A dataset with the given name or URL "
+                            "already exists."
+                        }
+                    }
+                }
+            }
+        },
         400: {
             "description": "Bad Request",
             "content": {
@@ -120,4 +135,15 @@ async def create_kafka_datasource(
         )
         return {"id": dataset_id}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        if "That URL is already in use" in str(e) \
+           or "That name is already in use" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "Duplicate Dataset",
+                    "detail": "A dataset with the given name or URL "
+                    "already exists."
+                }
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
