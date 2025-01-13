@@ -1,3 +1,5 @@
+# api/routes/status_routes/kafka_details.py
+
 from fastapi import APIRouter, HTTPException
 from api.config.kafka_settings import kafka_settings
 
