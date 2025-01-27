@@ -2,9 +2,15 @@ from ckanapi import NotFound
 from api.config.ckan_settings import ckan_settings
 
 
-def check_ckan_status() -> bool:
+def check_ckan_status(local=True) -> bool:
     """
     Check if CKAN is active and reachable.
+
+    Parameters
+    ----------
+    local : bool, optional
+        If True, check the local CKAN instance. If False, check the global CKAN
+        instance. The default is True.
 
     Returns
     -------
@@ -16,7 +22,10 @@ def check_ckan_status() -> bool:
     Exception
         If there is an error connecting to CKAN.
     """
-    ckan = ckan_settings.ckan
+    if local:
+        ckan = ckan_settings.ckan
+    else:
+        ckan = ckan_settings.ckan_global
 
     try:
         # Make a request to the status endpoint of CKAN
