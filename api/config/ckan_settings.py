@@ -5,6 +5,7 @@ from ckanapi import RemoteCKAN
 
 
 class Settings(BaseSettings):
+    ckan_local_enabled: bool = True
     ckan_url: str = "http://localhost:5000"
     ckan_api_key: str = "your-api-key"
     ckan_global_url: str = "http://localhost:5000"

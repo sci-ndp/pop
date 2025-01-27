@@ -8,7 +8,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
 
 import api.routes as routes
-from api.config import swagger_settings
+from api.config import swagger_settings, ckan_settings
 
 
 app = FastAPI(
@@ -30,10 +30,13 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(routes.default_router, include_in_schema=False)
-app.include_router(routes.register_router, tags=["Registration"])
+if ckan_settings.ckan_local_enabled:
+    app.include_router(routes.register_router, tags=["Registration"])
 app.include_router(routes.search_router, tags=["Search"])
-app.include_router(routes.update_router, tags=["Update"])
-app.include_router(routes.delete_router, tags=["Delete"])
+if ckan_settings.ckan_local_enabled:
+    app.include_router(routes.update_router, tags=["Update"])
+if ckan_settings.ckan_local_enabled:
+    app.include_router(routes.delete_router, tags=["Delete"])
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
 
