@@ -89,6 +89,23 @@
     </div>
 
     <!-- JupyterLab -->
+    <div class="card card-square shadow-sm mx-2 my-2">
+        <div class="card-header card-header-custom">
+            <h5 class="card-title-custom">JupyterLab</h5>
+        </div>
+        <div class="card-body card-body-custom">
+            {% if use_jupyterlab %}
+            <a href="{{ jupyter_url }}" class="btn btn-primary"
+               target="_blank" rel="noopener noreferrer">
+                Access
+            </a>
+            {% else %}
+            <p class="text-muted">
+                <strong>Status:</strong> Disabled
+            </p>
+            {% endif %}
+        </div>
+    </div>
     {% if use_jupyterlab %}
     <div class="card card-square shadow-sm mx-2 my-2">
         <div class="card-header card-header-custom">
