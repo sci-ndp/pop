@@ -5,10 +5,11 @@ from api.services import status_services
 from api.services.keycloak_services.introspect_user_token import \
     get_client_token
 
+
 def get_status():
     """
     Checks if local/global CKAN and Keycloak are active and reachable.
-    
+
     Returns
     -------
     dict
@@ -22,7 +23,7 @@ def get_status():
 
     Note
     ----
-    If local CKAN is disabled, 'ckan_is_active_local' will be None by default 
+    If local CKAN is disabled, 'ckan_is_active_local' will be None by default
     and no check will be performed for local CKAN.
     """
     status_dict = {
