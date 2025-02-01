@@ -6,8 +6,6 @@ from fastapi.templating import Jinja2Templates
 from api.config import swagger_settings
 from api.config.kafka_settings import kafka_settings
 from api.services import status_services
-from api.services.keycloak_services.introspect_user_token import \
-    get_client_token
 
 
 def index(request: Request):

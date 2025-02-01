@@ -10,74 +10,88 @@
         <h1>{{ title }} v{{ version }}</h1>
         <hr />
 
-        <!-- Local CKAN -->
-        {% if status.ckan_local_enabled %}
-            <p class="text-primary">
-                <strong>Local CKAN:</strong> Enabled
-            </p>
-            {% if status.ckan_is_active_local %}
-                <p class="lead text-success">
-                    <i class="fas fa-check-circle"></i> Local CKAN is active and reachable
-                </p>
-            {% else %}
-                <p class="lead text-danger">
-                    <i class="fas fa-times-circle"></i> Local CKAN is not reachable
-                </p>
-            {% endif %}
-        {% else %}
-            <p class="text-muted">
-                <strong>Local CKAN:</strong> Disabled
-            </p>
-        {% endif %}
-
-        <!-- Global CKAN -->
-        {% if status.ckan_is_active_global %}
-            <p class="lead text-success">
-                <i class="fas fa-check-circle"></i> Global CKAN is active and reachable
-            </p>
-        {% else %}
-            <p class="lead text-danger">
-                <i class="fas fa-times-circle"></i> Global CKAN is not reachable
-            </p>
-        {% endif %}
-
         <!-- Keycloak -->
         {% if status.keycloak_is_active %}
-            <p class="lead text-success">
-                <i class="fas fa-check-circle"></i> Keycloak is active and reachable
+            <p class="text-primary text-success">
+                <strong>Keycloak:</strong> Reachable
             </p>
         {% else %}
-            <p class="lead text-danger">
-                <i class="fas fa-times-circle"></i> Keycloak is not reachable
+            <p class="text-primary text-danger">
+                <strong>Keycloak:</strong> Not reachable
             </p>
         {% endif %}
+
+        <!-- Remote CKAN -->
+        {% if status.ckan_is_active_global %}
+            <p class="text-primary text-success">
+                <strong>Remote CKAN:</strong> Reachable
+            </p>
+        {% else %}
+        <p class="text-primary text-danger">
+            <strong>Remote CKAN:</strong> Not reachable
+        </p>
+        {% endif %}
+
     </div>
 </div>
 
 <!-- Extras Section -->
 <div class="row mt-4 d-flex justify-content-center">
+    <!-- Local CKAN in a card -->
+    <div class="card card-square shadow-sm mx-2 my-2">
+      <div class="card-header card-header-custom">
+          <h5 class="card-title-custom">Local CKAN</h5>
+      </div>
+      <div class="card-body card-body-custom">
+          {% if status.ckan_local_enabled %}
+              {% if status.ckan_is_active_local is not none %}
+                  {% if status.ckan_is_active_local %}
+                      <p class="text-primary text-success">
+                          <strong>Status:</strong> Reachable
+                      </p>
+                  {% else %}
+                      <p class="text-primary text-danger">
+                          <strong>Status:</strong> Not reachable
+                      </p>
+                  {% endif %}
+              {% else %}
+                  <!-- If you do not set 'ckan_is_active_local' when disabled, 
+                       this block might remain unused. -->
+                  <p class="text-muted">
+                      <strong>Status:</strong> Not reachable
+                  </p>
+              {% endif %}
+          {% else %}
+              <p class="text-muted">
+                  <strong>Status:</strong> Disabled
+              </p>
+          {% endif %}
+      </div>
+    </div>
+
     <!-- Kafka -->
     {% if kafka_info.kafka_connection %}
-    <div class="card card-square shadow-sm mx-2">
+    <div class="card card-square shadow-sm mx-2 my-2">
         <div class="card-header card-header-custom">
-            <h5 class="card-title-custom">Kafka Connection</h5>
+            <h5 class="card-title-custom">Kafka</h5>
         </div>
         <div class="card-body card-body-custom">
-            <p><strong>Host:</strong> {{ kafka_info.kafka_host }}</p>
-            <p><strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
+            <p><strong>Host:</strong> {{ kafka_info.kafka_host }}</br>
+               <strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
         </div>
     </div>
     {% endif %}
 
     <!-- JupyterLab -->
     {% if use_jupyterlab %}
-    <div class="card card-square shadow-sm mx-2">
+    <div class="card card-square shadow-sm mx-2 my-2">
         <div class="card-header card-header-custom">
             <h5 class="card-title-custom">JupyterLab</h5>
         </div>
         <div class="card-body card-body-custom">
-            <a href="{{ jupyter_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-                Access JupyterLab
+            <a href="{{ jupyter_url }}" class="btn btn-primary"
+               target="_blank" rel="noopener noreferrer">
+                Access
             </a>
         </div>
     </div>
