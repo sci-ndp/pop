@@ -1,6 +1,15 @@
+import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 from api.main import app  # Import your FastAPI application
+from api.config.ckan_settings import ckan_settings
+
+# Skip every test in this file if local CKAN is disabled
+pytestmark = pytest.mark.skipif(
+    not ckan_settings.ckan_local_enabled,
+    reason="Local CKAN is disabled; skipping organization deletion tests."
+)
+
 
 client = TestClient(app)
 
