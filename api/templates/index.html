@@ -69,18 +69,24 @@
       </div>
     </div>
 
-    <!-- Kafka -->
-    {% if kafka_info.kafka_connection %}
+    <!-- Kafka in a card with a similar style -->
     <div class="card card-square shadow-sm mx-2 my-2">
-        <div class="card-header card-header-custom">
-            <h5 class="card-title-custom">Kafka</h5>
-        </div>
-        <div class="card-body card-body-custom">
-            <p><strong>Host:</strong> {{ kafka_info.kafka_host }}</br>
-               <strong>Port:</strong> {{ kafka_info.kafka_port }}</p>
-        </div>
+    <div class="card-header card-header-custom">
+        <h5 class="card-title-custom">Kafka</h5>
     </div>
-    {% endif %}
+    <div class="card-body card-body-custom">
+        {% if kafka_info.kafka_connection %}
+        <p>
+            <strong>Host:</strong> {{ kafka_info.kafka_host }}<br/>
+            <strong>Port:</strong> {{ kafka_info.kafka_port }}
+        </p>
+        {% else %}
+        <p class="text-muted">
+            <strong>Status:</strong> Disabled
+        </p>
+        {% endif %}
+    </div>
+    </div>
 
     <!-- JupyterLab -->
     {% if use_jupyterlab %}
