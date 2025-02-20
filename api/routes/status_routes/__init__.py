@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from .get import router as get_router
 from .kafka_details import router as kafka_router
+from .get_jupyter import router as get_jupyter_router
 
 router = APIRouter()
 
