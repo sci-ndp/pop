@@ -4,10 +4,9 @@ from api.services import kafka_services
 from api.models.request_kafka_model import KafkaDataSourceRequest
 from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
-
+from api.config import ckan_settings  # Import the settings
 
 router = APIRouter()
-
 
 @router.post(
     "/kafka",
@@ -35,25 +34,25 @@ router = APIRouter()
         "(optional).\n\n"
         "### Example Payload\n"
         "{\n"
-        '    "dataset_name": "kafka_topic_example",\n'
-        '    "dataset_title": "Kafka Topic Example",\n'
-        '    "owner_org": "organization_id",\n'
-        '    "kafka_topic": "example_topic",\n'
-        '    "kafka_host": "kafka_host",\n'
-        '    "kafka_port": "kafka_port",\n'
-        '    "dataset_description": "This is an example Kafka topic '
-        'registered as a system dataset.",\n'
-        '    "extras": {\n'
-        '        "key1": "value1",\n'
-        '        "key2": "value2"\n'
+        '    \"dataset_name\": \"kafka_topic_example\",\n'
+        '    \"dataset_title\": \"Kafka Topic Example\",\n'
+        '    \"owner_org\": \"organization_id\",\n'
+        '    \"kafka_topic\": \"example_topic\",\n'
+        '    \"kafka_host\": \"kafka_host\",\n'
+        '    \"kafka_port\": \"kafka_port\",\n'
+        '    \"dataset_description\": \"This is an example Kafka topic '
+        'registered as a system dataset.\",\n'
+        '    \"extras\": {\n'
+        '        \"key1\": \"value1\",\n'
+        '        \"key2\": \"value2\"\n'
         '    },\n'
-        '    "mapping": {\n'
-        '        "field1": "mapping1",\n'
-        '        "field2": "mapping2"\n'
+        '    \"mapping\": {\n'
+        '        \"field1\": \"mapping1\",\n'
+        '        \"field2\": \"mapping2\"\n'
         '    },\n'
-        '    "processing": {\n'
-        '        "data_key": "data",\n'
-        '        "info_key": "info"\n'
+        '    \"processing\": {\n'
+        '        \"data_key\": \"data\",\n'
+        '        \"info_key\": \"info\"\n'
         '    }\n'
         "}\n"
     ),
@@ -73,8 +72,8 @@ router = APIRouter()
                     "example": {
                         "detail": {
                             "error": "Duplicate Dataset",
-                            "detail": "A dataset with the given name or URL "
-                            "already exists."
+                            "detail": "A dataset with the given name or "
+                            "URL already exists."
                         }
                     }
                 }
@@ -86,8 +85,7 @@ router = APIRouter()
                 "application/json": {
                     "example": {
                         "detail": (
-                            "Error creating Kafka dataset: "
-                            "<error message>"
+                            "Error creating Kafka dataset: <error message>"
                         )
                     }
                 }
@@ -121,6 +119,12 @@ async def create_kafka_datasource(
         HTTPException is raised with a detailed message.
     """
     try:
+        # Determine which CKAN instance to use
+        if ckan_settings.pre_ckan_enabled:
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
         dataset_id = kafka_services.add_kafka(
             dataset_name=data.dataset_name,
             dataset_title=data.dataset_title,
@@ -131,7 +135,8 @@ async def create_kafka_datasource(
             dataset_description=data.dataset_description,
             extras=data.extras,
             mapping=data.mapping,
-            processing=data.processing
+            processing=data.processing,
+            ckan_instance=ckan_instance
         )
         return {"id": dataset_id}
     except Exception as e:
@@ -142,7 +147,7 @@ async def create_kafka_datasource(
                 detail={
                     "error": "Duplicate Dataset",
                     "detail": "A dataset with the given name or URL "
-                    "already exists."
+                              "already exists."
                 }
             )
         raise HTTPException(
