@@ -84,9 +84,11 @@ async def search_datasets(
             "Use `null` for global search of the term."
         )
     ),
-    server: Literal['local', 'global'] = Query(
+    server: Literal['local', 'global', 'pre_ckan'] = Query(
         'local',
-        description="Specify the server to search on: 'local' or 'global'."
+        description=(
+            "Specify the server to search on: "
+            "'local', 'global', or 'pre_ckan'.")
     )
 ):
     """

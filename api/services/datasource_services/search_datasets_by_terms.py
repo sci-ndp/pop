@@ -10,75 +10,40 @@ from api.models import DataSourceResponse, Resource
 
 
 def escape_solr_special_chars(value: str) -> str:
-    """
-    Escape special characters for Solr queries.
-
-    According to Solr documentation, the following characters need to be
-    escaped: + - && || ! ( ) { } [ ] ^ " ~ * ? : \\
-    """
-    # Compile a regex that matches any special character that Solr requires
-    # escaping.
     pattern = re.compile(r'([+\-\!\(\)\{\}\[\]\^"~\*\?:\\])')
-    # pattern = re.compile(r'([+\!\(\)\{\}\[\]\^~\*\?:\\])')
-    # Replace each found character with a backslash-escaped version.
     return pattern.sub(r'\\\1', value)
 
 
 async def search_datasets_by_terms(
     terms_list: List[str],
     keys_list: Optional[List[Optional[str]]] = None,
-    server: Literal['local', 'global'] = "local"
+    server: Literal['local', 'global', 'pre_ckan'] = "local"
 ) -> List[DataSourceResponse]:
-    """
-    Search for datasets in CKAN that match given terms with optional keys.
-
-    Parameters
-    ----------
-    terms_list : List[str]
-        A list of terms to be used in the search query.
-    keys_list : Optional[List[Optional[str]]]
-        An optional list of keys corresponding to each term. Use 'null' or
-        None for a global search on that term.
-    server : Literal['local', 'global']
-        The CKAN server to use ('local' or 'global'). Defaults to 'local'.
-
-    Returns
-    -------
-    List[DataSourceResponse]
-        A list of datasets that match the search criteria.
-
-    Raises
-    ------
-    HTTPException
-        If there is an error during the search or if the server is invalid.
-    """
-    # Validate that server is either 'local' or 'global'.
-    if server not in ["local", "global"]:
+    if server not in ["local", "global", "pre_ckan"]:
         raise HTTPException(
             status_code=400,
-            detail="Invalid server specified. Use 'local' or 'global'."
+            detail=(
+                "Invalid server specified. Use 'local', "
+                "'global', or 'pre_ckan'.")
         )
 
-    # Select the appropriate CKAN instance.
     if server == "local":
         ckan = ckan_settings.ckan_no_api_key
-    else:
+    elif server == "global":
         ckan = ckan_settings.ckan_global
+    elif server == "pre_ckan":
+        ckan = ckan_settings.pre_ckan_no_api_key
 
-    # Escape all terms to avoid issues with special characters in Solr queries.
     escaped_terms = [escape_solr_special_chars(term) for term in terms_list]
 
     query_parts = []
 
     if keys_list:
-        # Convert 'null' or None keys to None, indicating global search.
         processed_keys = [
             None if key is None or key.lower() == 'null' else key
             for key in keys_list
         ]
 
-        # Combine keys and terms. If a key is provided, pair it with a term.
-        # If key is None, the term is searched globally.
         for term, key in zip(escaped_terms, processed_keys):
             if key:
                 escaped_key = escape_solr_special_chars(key)
@@ -86,27 +51,18 @@ async def search_datasets_by_terms(
             else:
                 query_parts.append(term)
     else:
-        # If no keys are provided, all terms are considered global searches.
         query_parts = escaped_terms
 
-    # Join query parts with 'AND' so that all terms must match.
     query_string = ' AND '.join(query_parts)
 
     try:
-        # Execute the search query in CKAN.
         datasets = ckan.action.package_search(q=query_string, rows=1000)
         results_list = []
 
-        # Process each returned dataset into the response model.
         for dataset in datasets['results']:
-            # Convert the entire dataset dict to a string
             dataset_str = json.dumps(dataset).lower()
 
-            # Check if all terms appear in the dataset string
-            # If you want to require all terms, use `all()`.
-            # If you want at least one term, use `any()`.
             if all(term.lower() in dataset_str for term in terms_list):
-
                 resources_list = [
                     Resource(
                         id=res['id'],
@@ -127,7 +83,6 @@ async def search_datasets_by_terms(
                     for extra in dataset.get('extras', [])
                 }
 
-                # Attempt to parse JSON in 'mapping' and 'processing' extras.
                 if 'mapping' in extras:
                     try:
                         extras['mapping'] = json.loads(extras['mapping'])
@@ -155,11 +110,9 @@ async def search_datasets_by_terms(
         return results_list
 
     except NotFound:
-        # If no datasets match the query, return an empty list.
         return []
 
     except Exception as e:
-        # If any other error occurs, raise an HTTPException with the error.
         raise HTTPException(
             status_code=400,
             detail=f"Error searching for datasets: {str(e)}"
