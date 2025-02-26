@@ -7,11 +7,22 @@ client = TestClient(app)
 
 def test_kafka_details_route():
     # Mock the individual attributes of kafka_settings
-    with patch('api.config.kafka_settings.kafka_host', new="localhost"), \
-         patch('api.config.kafka_settings.kafka_port', new=9092), \
-         patch('api.config.kafka_settings.kafka_connection', new=True), \
-         patch('api.config.kafka_settings.kafka_prefix', new="data_stream_"), \
-         patch('api.config.kafka_settings.max_streams', new=10):
+    with (
+        patch(
+            'api.config.kafka_settings.kafka_settings.kafka_host',
+            new="localhost"),
+        patch(
+            'api.config.kafka_settings.kafka_settings.kafka_port',
+            new=9092),
+        patch(
+            'api.config.kafka_settings.kafka_settings.kafka_connection',
+            new=True),
+        patch(
+            'api.config.kafka_settings.kafka_settings.kafka_prefix',
+            new="data_stream_"),
+        patch(
+            'api.config.kafka_settings.kafka_settings.max_streams',
+            new=10)):
 
         # Send GET request to the endpoint
         response = client.get("/status/kafka-details")

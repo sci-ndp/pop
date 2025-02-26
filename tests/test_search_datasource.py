@@ -147,7 +147,8 @@ async def test_search_datasets_invalid_server():
     actual_error_detail = response.json()["detail"][0]
 
     assert actual_error_detail["loc"] == ["query", "server"]
-    assert actual_error_detail["msg"] == "Input should be 'local' or 'global'"
+    assert actual_error_detail["msg"] == (
+        "Input should be 'local', 'global' or 'pre_ckan'")
 
 
 @pytest.mark.asyncio
