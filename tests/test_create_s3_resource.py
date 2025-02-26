@@ -1,6 +1,7 @@
+# tests/test_create_s3_resource.py
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from api.main import app
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config.ckan_settings import ckan_settings
@@ -32,7 +33,7 @@ def test_create_s3_resource_success():
             "owner_org": "organization_id",
             "resource_s3": "s3://bucket/path/to/object",
             "notes": "This is a test resource.",
-            "extras": {"key1": "value1", "key2": "value2"}
+            "extras": {"key1": "value1", "key2": "value2"},
         }
 
         response = client.post("/s3", json=data)
@@ -46,7 +47,8 @@ def test_create_s3_resource_success():
             owner_org="organization_id",
             resource_s3="s3://bucket/path/to/object",
             notes="This is a test resource.",
-            extras={"key1": "value1", "key2": "value2"}
+            extras={"key1": "value1", "key2": "value2"},
+            ckan_instance=ANY
         )
 
         # Clean up dependency overrides
