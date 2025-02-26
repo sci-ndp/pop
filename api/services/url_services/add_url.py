@@ -1,22 +1,26 @@
+# api\services\url_services\add_url.py
 import json
 from api.config import ckan_settings, dxspaces_settings
 
 
-# Define a set of reserved keys that should not be used in the extras
 RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection',
-    'url', 'mapping', 'processing', 'file_type'}
+    'url', 'mapping', 'processing', 'file_type'
+}
 
 
-def add_url(resource_name,
-            resource_title,
-            owner_org,
-            resource_url,
-            file_type="",
-            notes="",
-            extras=None,
-            mapping=None,
-            processing=None):
+def add_url(
+    resource_name,
+    resource_title,
+    owner_org,
+    resource_url,
+    file_type="",
+    notes="",
+    extras=None,
+    mapping=None,
+    processing=None,
+    ckan_instance=None  # <-- New param
+):
     """
     Add a URL resource to CKAN.
 
@@ -30,6 +34,8 @@ def add_url(resource_name,
         The ID of the organization to which the resource belongs.
     resource_url : str
         The URL of the resource to be added.
+    file_type : str, optional
+        The type of the file (e.g. 'stream', 'CSV', 'TXT', 'JSON', 'NetCDF').
     notes : str, optional
         Additional notes about the resource (default is an empty string).
     extras : dict, optional
@@ -40,6 +46,9 @@ def add_url(resource_name,
     processing : dict, optional
         Processing information for the dataset based on the file type
         (default is None).
+    ckan_instance : optional
+        A CKAN instance to use for resource creation. If not provided,
+        uses the default `ckan_settings.ckan`.
 
     Returns
     -------
@@ -48,13 +57,8 @@ def add_url(resource_name,
 
     Raises
     ------
-    ValueError
-        If any input parameter is invalid.
-    KeyError
-        If any reserved key is found in the extras.
-    Exception
-        If there is an error creating the resource, an exception is raised
-        with a detailed message.
+    ValueError, KeyError, Exception
+        If there is any error in validation or creation.
     """
 
     if not isinstance(extras, (dict, type(None))):
@@ -63,55 +67,54 @@ def add_url(resource_name,
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
             "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}")
+            f"{RESERVED_KEYS.intersection(extras)}"
+        )
 
-    url_extras = {
-        "file_type": file_type
-    }
+    # Decide which CKAN instance to use
+    if ckan_instance is None:
+        ckan_instance = ckan_settings.ckan
+
+    url_extras = {"file_type": file_type}
 
     if dxspaces_settings.registration_methods['url'] and file_type == "NetCDF":
         dxspaces = dxspaces_settings.dxspaces
         staging_params = {'url': resource_url}
-        staging_handle = dxspaces.Register(
-            'url', resource_name, staging_params)
+        staging_handle = dxspaces.Register('url', resource_name, staging_params)
+        if extras is None:
+            extras = {}
         extras['staging_socket'] = dxspaces_settings.dxspaces_url
         extras['staging_handle'] = staging_handle.model_dump_json()
 
     if mapping:
         url_extras['mapping'] = json.dumps(mapping)
-
     if processing:
         url_extras['processing'] = json.dumps(processing)
 
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(url_extras)
 
-    ckan = ckan_settings.ckan
-
     try:
-        # Create the resource package in CKAN with additional extras if
-        # provided
         resource_package_dict = {
             'name': resource_name,
             'title': resource_title,
             'owner_org': owner_org,
             'notes': notes,
             'extras': [
-                {'key': k, 'value': v} for k, v in extras_cleaned.items()]
+                {'key': k, 'value': v} for k, v in extras_cleaned.items()
+            ]
         }
 
-        resource_package = ckan.action.package_create(**resource_package_dict)
-
-        # Retrieve the resource package ID
+        resource_package = ckan_instance.action.package_create(
+            **resource_package_dict
+        )
         resource_package_id = resource_package['id']
+
     except Exception as e:
-        # If an error occurs, raise an exception with a detailed error message
         raise Exception(f"Error creating resource package: {str(e)}")
 
     if resource_package_id:
         try:
-            # Create the resource within the newly created resource package
-            ckan.action.resource_create(
+            ckan_instance.action.resource_create(
                 package_id=resource_package_id,
                 url=resource_url,
                 name=resource_name,
@@ -119,13 +122,8 @@ def add_url(resource_name,
                 format="url"
             )
         except Exception as e:
-            # If an error occurs, raise an exception with a detailed error
-            # message
             raise Exception(f"Error creating resource: {str(e)}")
 
-        # If everything goes well, return the resource package ID
         return resource_package_id
     else:
-        # This shouldn't happen as the resource package creation should either
-        # succeed or raise an exception
         raise Exception("Unknown error occurred")
