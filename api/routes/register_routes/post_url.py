@@ -6,7 +6,9 @@ from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config import ckan_settings  # Import the CKAN settings
 
+
 router = APIRouter()
+
 
 @router.post(
     "/url",
@@ -27,7 +29,8 @@ router = APIRouter()
         "- **extras**: Additional metadata to be added to the resource "
         "package as extras (optional).\n"
         "- **mapping**: Mapping information for the dataset (optional).\n"
-        "- **processing**: Processing information for the dataset (optional).\n"
+        "- **processing**: Processing information for the "
+        "dataset (optional).\n"
     ),
     responses={
         201: {

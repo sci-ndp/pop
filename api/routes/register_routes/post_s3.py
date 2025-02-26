@@ -5,7 +5,9 @@ from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config import ckan_settings  # Import the settings
 
+
 router = APIRouter()
+
 
 @router.post(
     "/s3",

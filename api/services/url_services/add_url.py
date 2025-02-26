@@ -79,7 +79,8 @@ def add_url(
     if dxspaces_settings.registration_methods['url'] and file_type == "NetCDF":
         dxspaces = dxspaces_settings.dxspaces
         staging_params = {'url': resource_url}
-        staging_handle = dxspaces.Register('url', resource_name, staging_params)
+        staging_handle = dxspaces.Register(
+            'url', resource_name, staging_params)
         if extras is None:
             extras = {}
         extras['staging_socket'] = dxspaces_settings.dxspaces_url

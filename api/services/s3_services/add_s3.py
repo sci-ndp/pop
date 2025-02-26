@@ -4,6 +4,7 @@ RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection'
 }
 
+
 def add_s3(
     resource_name,
     resource_title,
