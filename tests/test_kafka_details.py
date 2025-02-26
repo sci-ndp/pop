@@ -4,7 +4,9 @@ from unittest.mock import patch
 from api.main import app
 from api.config.kafka_settings import kafka_settings
 
+
 client = TestClient(app)
+
 
 def test_kafka_details_route():
     with patch.object(kafka_settings, 'kafka_host', new="localhost"), \
