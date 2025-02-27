@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Literal
 from api.services import datasource_services
 from api.models import DataSourceResponse
+from api.config.ckan_settings import ckan_settings  # Import CKAN settings
 
 router = APIRouter()
 
@@ -16,9 +17,12 @@ router = APIRouter()
         "Search CKAN datasets by providing a list of terms.\n\n"
         "### Parameters\n"
         "- **terms**: A list of terms to search for in the datasets.\n"
-        "- **keys**: An optional list specifying the keys to search each "
-        "term.\n"
-        "- **server**: Specify the server to search on: 'local' or 'global'."
+        "- **keys**: An optional list specifying the keys "
+        "to search each term.\n"
+        "- **server**: Specify the server to search on: 'local', "
+        "'global', or 'pre_ckan'.\n"
+        "  If 'local' CKAN is disabled, it is not allowed.\n"
+        "  If no server is specified, the default value is 'global'."
     ),
     responses={
         200: {
@@ -81,14 +85,16 @@ async def search_datasets(
         None,
         description=(
             "An optional list of keys corresponding to each term. "
-            "Use `null` for global search of the term."
+            "Use `null` for a global search of the term."
         )
     ),
     server: Literal['local', 'global', 'pre_ckan'] = Query(
-        'local',
+        'global',  # Default value is always 'global'
         description=(
-            "Specify the server to search on: "
-            "'local', 'global', or 'pre_ckan'.")
+            "Specify the server to search on: 'local', "
+            "'global', or 'pre_ckan'."
+            "If 'local' CKAN is disabled, it cannot be used."
+        )
     )
 ):
     """
@@ -100,10 +106,12 @@ async def search_datasets(
     terms : List[str]
         A list of terms to search for in the datasets.
     keys : Optional[List[Optional[str]]]
-        An optional list specifying the keys to search each term. Use `null`
-        for global search of the term.
-    server : Literal['local', 'global']
-        Specify the server to search on: 'local' or 'global'.
+        An optional list specifying the keys to search each term.
+        Use `null` for a global search of the term.
+    server : Literal['local', 'global', 'pre_ckan']
+        Specify the server to search on: 'local', 'global', or 'pre_ckan'.
+        If 'local' CKAN is disabled, it is not allowed.
+        If no server is specified, the default is 'global'.
 
     Returns
     -------
@@ -113,17 +121,30 @@ async def search_datasets(
     Raises
     ------
     HTTPException
-        If there is an error searching for the datasets or validation fails.
+        - 400: If the number of keys does not match the number of terms.
+        - 400: If 'local' CKAN is disabled and selected.
+        - 422: If required query parameters are missing.
     """
+
+    # Ensure the number of keys matches the number of terms if provided
     if keys is not None and len(keys) != len(terms):
         raise HTTPException(
             status_code=400,
             detail=(
                 "The number of keys must match the number of terms, or keys "
-                "must be omitted.")
+                "must be omitted."
+            )
+        )
+
+    # Validate that 'local' server is only allowed when CKAN local is enabled
+    if server == 'local' and not ckan_settings.ckan_local_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Local CKAN is disabled and cannot be used."
         )
 
     try:
+        # Call the service function to perform the dataset search
         results = await datasource_services.search_datasets_by_terms(
             terms_list=terms,
             keys_list=keys,
@@ -131,6 +152,8 @@ async def search_datasets(
         )
         return results
     except HTTPException as he:
+        # Re-raise FastAPI-specific exceptions
         raise he
     except Exception as e:
+        # Catch-all error handler to return a user-friendly response
         raise HTTPException(status_code=400, detail=str(e))
