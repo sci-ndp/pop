@@ -1,5 +1,6 @@
 # tests\test_search_datasource.py
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
 from api.main import app
@@ -344,3 +345,27 @@ async def test_search_datasets_special_chars_in_keys():
             keys_list=["metadata[field]"],
             server="global"
         )
+
+
+@pytest.mark.asyncio
+async def test_search_datasets_global_ckan_unreachable():
+    """
+    Test the /search endpoint when CKAN global is unreachable.
+
+    Expected behavior:
+    - The API should return a 400 Bad Request.
+    - The error message should be "Global catalog is not reachable."
+    """
+    with patch(
+        "api.services.datasource_services.search_datasets_by_terms",
+        side_effect=HTTPException(
+            status_code=400, detail="Global catalog is not reachable."
+        )
+    ):
+        response = client.get(
+            "/search", params=[("terms", "example"), ("server", "global")])
+        assert response.status_code == 400, (
+            "Expected 400 status for unreachable global CKAN."
+        )
+        assert response.json() == {
+            "detail": "Global catalog is not reachable."}
