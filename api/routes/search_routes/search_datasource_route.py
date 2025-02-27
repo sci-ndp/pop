@@ -17,8 +17,10 @@ router = APIRouter()
         "Search CKAN datasets by providing a list of terms.\n\n"
         "### Parameters\n"
         "- **terms**: A list of terms to search for in the datasets.\n"
-        "- **keys**: An optional list specifying the keys to search each term.\n"
-        "- **server**: Specify the server to search on: 'local', 'global', or 'pre_ckan'.\n"
+        "- **keys**: An optional list specifying the keys "
+        "to search each term.\n"
+        "- **server**: Specify the server to search on: 'local', "
+        "'global', or 'pre_ckan'.\n"
         "  If 'local' CKAN is disabled, it is not allowed.\n"
         "  If no server is specified, the default value is 'global'."
     ),
@@ -89,7 +91,8 @@ async def search_datasets(
     server: Literal['local', 'global', 'pre_ckan'] = Query(
         'global',  # Default value is always 'global'
         description=(
-            "Specify the server to search on: 'local', 'global', or 'pre_ckan'."
+            "Specify the server to search on: 'local', "
+            "'global', or 'pre_ckan'."
             "If 'local' CKAN is disabled, it cannot be used."
         )
     )
@@ -122,7 +125,7 @@ async def search_datasets(
         - 400: If 'local' CKAN is disabled and selected.
         - 422: If required query parameters are missing.
     """
-    
+
     # Ensure the number of keys matches the number of terms if provided
     if keys is not None and len(keys) != len(terms):
         raise HTTPException(
