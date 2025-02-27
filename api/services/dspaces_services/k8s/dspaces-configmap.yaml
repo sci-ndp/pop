@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: dspaces
+  name: dspaces-cm
+data:
+  dspaces.toml: |
+    [server]
+    dims = [ 256, 256, 256 ]
+    max_versions = 8
+
+    [modules.s3nc]
+    namespace='goes17'
+    file='s3nc_mod.py'
+
+    [modules.gddp]
+    namespace='cmip6-planetary'
+    file='azure_mod.py'
+
+    [modules.url]
+    namespaces='url'
+    file='url_mod.py'
+

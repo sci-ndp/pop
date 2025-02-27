@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dspaces-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dspaces-api
+  template:
+    metadata:
+      labels:
+        app: dspaces-api
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: dspaces-api
+          image: yutianqin/dspaces-api:v4
+          imagePullPolicy: Always
+          workingDir: /app
+          ports:
+            - containerPort: 8001
+              protocol: TCP
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: API_PORT
+              value: "8001"
+            - name: DSPACES_SERVER_PORT
+              value: "4000"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+
+      restartPolicy: Always

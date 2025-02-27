@@ -40,6 +40,7 @@ if ckan_settings.ckan_local_enabled:
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
 
+app.include_router(routes.dspaces_router, tags=["DataSpaces"])
 
 # Custom OpenAPI Schema for Swagger
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")

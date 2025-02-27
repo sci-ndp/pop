@@ -10,3 +10,4 @@ httpx
 pytest-mock
 trio
 pytest-asyncio
+kubernetes
