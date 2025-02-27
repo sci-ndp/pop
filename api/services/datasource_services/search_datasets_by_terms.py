@@ -4,7 +4,7 @@ import json
 import re
 from typing import List, Optional, Literal
 from fastapi import HTTPException
-from ckanapi import NotFound
+from ckanapi import NotFound, CKANAPIError
 from api.config.ckan_settings import ckan_settings
 from api.models import DataSourceResponse, Resource
 
@@ -17,7 +17,7 @@ def escape_solr_special_chars(value: str) -> str:
 async def search_datasets_by_terms(
     terms_list: List[str],
     keys_list: Optional[List[Optional[str]]] = None,
-    server: Literal['local', 'global', 'pre_ckan'] = "local"
+    server: Literal['local', 'global', 'pre_ckan'] = "global"
 ) -> List[DataSourceResponse]:
     if server not in ["local", "global", "pre_ckan"]:
         raise HTTPException(
@@ -111,7 +111,17 @@ async def search_datasets_by_terms(
 
     except NotFound:
         return []
-
+    except CKANAPIError as e:
+        # Handle errors when CKAN is unreachable
+        if server == "global":
+            raise HTTPException(
+                status_code=400,
+                detail="Global catalog is not reachable."
+            )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error searching for datasets: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=400,
