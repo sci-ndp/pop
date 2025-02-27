@@ -346,6 +346,7 @@ async def test_search_datasets_special_chars_in_keys():
             server="global"
         )
 
+
 @pytest.mark.asyncio
 async def test_search_datasets_global_ckan_unreachable():
     """
@@ -361,8 +362,10 @@ async def test_search_datasets_global_ckan_unreachable():
             status_code=400, detail="Global catalog is not reachable."
         )
     ):
-        response = client.get("/search", params=[("terms", "example"), ("server", "global")])
+        response = client.get(
+            "/search", params=[("terms", "example"), ("server", "global")])
         assert response.status_code == 400, (
             "Expected 400 status for unreachable global CKAN."
         )
-        assert response.json() == {"detail": "Global catalog is not reachable."}
+        assert response.json() == {
+            "detail": "Global catalog is not reachable."}
