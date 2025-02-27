@@ -125,7 +125,7 @@ async def test_search_datasets_exception():
         mock_search.assert_awaited_once_with(
             terms_list=["example"],
             keys_list=None,
-            server="local"
+            server="global"
         )
 
 
@@ -179,7 +179,7 @@ async def test_search_datasets_empty_terms():
         mock_search.assert_awaited_once_with(
             terms_list=[""],
             keys_list=None,
-            server="local"
+            server="global"
         )
 
 
@@ -229,7 +229,7 @@ async def test_search_datasets_with_keys():
         mock_search.assert_awaited_once_with(
             terms_list=["another", "dataset"],
             keys_list=["description", "extras.key1"],
-            server="local"
+            server="global"
         )
 
 
@@ -280,7 +280,7 @@ async def test_search_datasets_mixed_keys():
         mock_search.assert_awaited_once_with(
             terms_list=["global_term", "specific_term"],
             keys_list=["null", "description"],
-            server="local"
+            server="global"
         )
 
 
@@ -342,5 +342,5 @@ async def test_search_datasets_special_chars_in_keys():
         mock_search.assert_awaited_once_with(
             terms_list=["example"],
             keys_list=["metadata[field]"],
-            server="local"
+            server="global"
         )
