@@ -8,6 +8,7 @@ from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
+
 @router.post(
     "/search",
     response_model=List[DataSourceResponse],
@@ -48,7 +49,7 @@ router = APIRouter()
 async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
     """
     Search by various parameters, including an optional 'pre_ckan' server.
-    
+
     Raises
     ------
     HTTPException

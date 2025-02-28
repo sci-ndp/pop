@@ -1,8 +1,8 @@
 # api/models/searchrequest_model.py
-# Extended to allow 'pre_ckan' as a valid server option.
 
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
+
 
 class SearchRequest(BaseModel):
     """
