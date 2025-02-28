@@ -1,12 +1,12 @@
-#api/routes/search_routes/post_search_datasource_route.py
+# api/routes/search_routes/post_search_datasource_route.py
+# English comments, PEP-8 lines <=79 chars
+
 from fastapi import APIRouter, HTTPException
 from typing import List
 from api.services import datasource_services
 from api.models import DataSourceResponse, SearchRequest
 
-
 router = APIRouter()
-
 
 @router.post(
     "/search",
@@ -21,23 +21,21 @@ router = APIRouter()
         "- **resource_url**: the URL of the dataset resource\n"
         "- **resource_name**: the name of the dataset resource\n"
         "- **dataset_description**: the description of the dataset\n"
-        "- **resource_description**: the description of the dataset resource\n"
+        "- **resource_description**: the description of the resource\n"
         "- **resource_format**: the format of the dataset resource\n\n"
         "### User-defined value search parameters\n"
-        "- **search_term**: a comma-separated list of terms to search across"
-        " all fields\n"
-        "- **filter_list**: a list of field filters of the form `key:value`.\n"
-        "- **timestamp**: a filter on the `timestamp` field of results."
-        " Timestamp can have one of two formats:\n\n"
-        "    `[<>]?YYYY(-MM(-DD(THH(:mm(:ss)))))` - the closeset timestamp"
-        " value to that which is provided. `>` (**default**) indicates the"
-        " closest in the future, while `<` indicates the closest"
-        " in the past.\n"
-        "    `(YYYY(-MM(-DD(THH(:mm(:ss))))))?/YYYY(-MM(-DD(THH(:mm(:ss)))))` "
-        "- filter results to the specified time interval. A missing timestamp"
-        " indicates an open interval.\n"
-        "### Unused parameters\n"
-        "- **server** - one of `local` or `global`"),
+        "- **search_term**: a comma-separated list of terms to search "
+        "across all fields\n"
+        "- **filter_list**: a list of field filters of the form "
+        "`key:value`.\n"
+        "- **timestamp**: a filter on the `timestamp` field of results.\n\n"
+        "### Server selection\n"
+        "By default, 'server' can be one of `local` or `global`. "
+        "Optionally, `pre_ckan` is also supported if enabled.\n\n"
+        "### Examples\n"
+        "1) Searching by dataset_name and resource_format.\n"
+        "2) Providing multiple comma-separated terms in 'search_term'."
+    ),
     responses={
         200: {
             "description": "Datasets retrieved successfully",
@@ -97,16 +95,17 @@ async def search_datasource(data: SearchRequest):
     Raises
     ------
     HTTPException
-        If there is an error searching for the datasets, an HTTPException is
-        raised with a detailed message.
+        If there is an error searching for the datasets, an HTTPException
+        is raised with a detailed message.
     """
+    # Convert resource_format to lowercase if provided
+    if data.resource_format:
+        data.resource_format = data.resource_format.lower()
+
     try:
-        # Convert 'resource_format' to lowercase if it's provided
-        if data.resource_format:
-            data.resource_format = data.resource_format.lower()
         results = await datasource_services.search_datasource(
-            **data.model_dump())
+            **data.model_dump()
+        )
         return results
     except Exception as e:
-
         raise HTTPException(status_code=400, detail=str(e))
