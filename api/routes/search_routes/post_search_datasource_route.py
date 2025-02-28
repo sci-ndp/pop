@@ -1,10 +1,10 @@
 # api/routes/search_routes/post_search_datasource_route.py
-# English comments, PEP-8 lines <=79 chars
 
 from fastapi import APIRouter, HTTPException
 from typing import List
 from api.services import datasource_services
 from api.models import DataSourceResponse, SearchRequest
+from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
@@ -39,66 +39,29 @@ router = APIRouter()
     responses={
         200: {
             "description": "Datasets retrieved successfully",
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "id": "12345678-abcd-efgh-ijkl-1234567890ab",
-                            "name": "example_dataset_name",
-                            "title": "Example Dataset Title",
-                            "owner_org": "example_org_name",
-                            "description": "This is an example dataset.",
-                            "resources": [
-                                {
-                                    "id": "abcd1234-efgh5678-ijkl9012",
-                                    "url": "http://example.com/resource",
-                                    "name": "Example Resource Name",
-                                    "description": "This is an example.",
-                                    "format": "CSV"
-                                }
-                            ],
-                            "extras": {
-                                "key1": "value1",
-                                "key2": "value2"
-                            }
-                        }
-                    ]
-                }
-            }
         },
         400: {
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Error message explaining the bad request"
-                    }
-                }
-            }
+            "description": "Bad Request"
         }
     }
 )
-async def search_datasource(data: SearchRequest):
+async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
     """
-    Search by various parameters.
-
-    Parameters
-    ----------
-    data : SearchRequest
-        An object containing the parameters of the search
-
-    Returns
-    -------
-    List[DataSourceResponse]
-        A list of datasets that match the search criteria.
-
+    Search by various parameters, including an optional 'pre_ckan' server.
+    
     Raises
     ------
     HTTPException
-        If there is an error searching for the datasets, an HTTPException
-        is raised with a detailed message.
+        - 400: if 'pre_ckan' is disabled or unreachable.
     """
-    # Convert resource_format to lowercase if provided
+    # If server is 'pre_ckan' but not enabled, raise a 400 error
+    if data.server == 'pre_ckan' and not ckan_settings.pre_ckan_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-CKAN is disabled and cannot be used."
+        )
+
+    # Convert 'resource_format' to lowercase if it's provided
     if data.resource_format:
         data.resource_format = data.resource_format.lower()
 
@@ -107,5 +70,13 @@ async def search_datasource(data: SearchRequest):
             **data.model_dump()
         )
         return results
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception as exc:
+        error_text = str(exc)
+        # Provide a friendly error if CKAN complains about the scheme
+        if "No scheme supplied" in error_text:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(status_code=400, detail=error_text)
