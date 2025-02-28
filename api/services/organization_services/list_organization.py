@@ -1,15 +1,21 @@
+# api/services/organization_services/list_organization.py
 from typing import List, Optional
 from api.config.ckan_settings import ckan_settings
 
 
-def list_organization(name: Optional[str] = None) -> List[str]:
+def list_organization(name: Optional[str] = None,
+                      server: str = "global") -> List[str]:
     """
-    Retrieve a list of all organizations, optionally filtered by name.
+    Retrieve a list of all organizations from the specified CKAN server,
+    optionally filtered by name.
 
     Parameters
     ----------
     name : Optional[str]
         A string to filter organizations by name (case-insensitive).
+    server : str
+        The CKAN server to use. Can be 'local', 'global', or 'pre_ckan'.
+        Defaults to 'global'.
 
     Returns
     -------
@@ -22,18 +28,27 @@ def list_organization(name: Optional[str] = None) -> List[str]:
     Exception
         If there is an error retrieving the list of organizations.
     """
-    ckan = ckan_settings.ckan
+
+    # Choose the CKAN instance based on 'server'
+    if server == "pre_ckan":
+        ckan_instance = ckan_settings.pre_ckan
+    elif server == "global":
+        ckan_instance = ckan_settings.ckan_global
+    else:
+        # Default to local if server is 'local' or unrecognized
+        ckan_instance = ckan_settings.ckan_no_api_key
 
     try:
-        organizations = ckan.action.organization_list()
+        organizations = ckan_instance.action.organization_list()
 
-        # If a name is provided, filter the organizations list
+        # Filter the organizations if a name is provided
         if name:
-            name = name.lower()  # Make it case-insensitive
+            name_lower = name.lower()
             organizations = [
-                org for org in organizations if name in org.lower()]
+                org for org in organizations if name_lower in org.lower()
+            ]
 
         return organizations
 
-    except Exception as e:
-        raise Exception(f"Error retrieving list of organizations: {str(e)}")
+    except Exception as exc:
+        raise Exception(f"Error retrieving list of organizations: {str(exc)}")

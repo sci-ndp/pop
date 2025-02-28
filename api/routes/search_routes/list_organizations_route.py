@@ -1,7 +1,8 @@
 # api/routes/search_routes/list_organizations_route.py
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
+from typing import List, Optional, Literal
 from api.services import organization_services
+from api.config.ckan_settings import ckan_settings
 
 
 router = APIRouter()
@@ -12,7 +13,9 @@ router = APIRouter()
     response_model=List[str],
     summary="List all organizations",
     description=(
-        "Retrieve a list of all organizations, with optional name filtering."),
+        "Retrieve a list of all organizations, with optional name filtering "
+        "and optional CKAN server selection."
+    ),
     responses={
         200: {
             "description": "A list of all organizations",
@@ -27,7 +30,8 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Error message explaining the bad request"}
+                        "detail": "Error message explaining the bad request"
+                    }
                 }
             }
         }
@@ -35,22 +39,33 @@ router = APIRouter()
 )
 async def list_organizations(
     name: Optional[str] = Query(
-        None, description="An optional string to filter organizations by name"
+        None,
+        description="An optional string to filter organizations by name"
+    ),
+    server: Literal["local", "global", "pre_ckan"] = Query(
+        "global",
+        description=(
+            "Specify the server to list organizations from. Defaults to "
+            "'local'."
+        )
     )
 ):
     """
-    Endpoint to list all organizations. Optionally, filter organizations by a
-    partial name.
+    Endpoint to list all organizations. Optionally, filter organizations
+    by a partial name and specify the CKAN server.
 
     Parameters
     ----------
     name : Optional[str]
         A string to filter organizations by name (case-insensitive).
+    server : Literal['local', 'global', 'pre_ckan']
+        The CKAN server to list organizations from. Defaults to 'local'.
 
     Returns
     -------
     List[str]
-        A list of organization names, optionally filtered by the provided name.
+        A list of organization names, optionally filtered by the provided
+        name.
 
     Raises
     ------
@@ -58,8 +73,26 @@ async def list_organizations(
         If there is an error retrieving the list of organizations, an
         HTTPException is raised with a detailed message.
     """
+    if server == 'pre_ckan' and not ckan_settings.pre_ckan_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-CKAN is disabled and cannot be used."
+        )
+
     try:
-        organizations = organization_services.list_organization(name)
+        organizations = organization_services.list_organization(name, server)
         return organizations
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Convert the internal CKAN error to a more user-friendly message
+        error_message = str(e)
+
+        if "No scheme supplied" in error_message:
+            # Provide a cleaner explanation for the user
+            raise HTTPException(
+                status_code=400,
+                detail=("Server is not configured or "
+                        "is unreachable.")
+            )
+
+        # Otherwise, return the original error
+        raise HTTPException(status_code=400, detail=error_message)
