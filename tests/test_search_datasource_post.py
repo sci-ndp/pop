@@ -87,5 +87,5 @@ def test_search_datasource_exception():
             search_term=None,
             filter_list=None,
             timestamp=None,
-            server="local"
+            server="global"
         )
