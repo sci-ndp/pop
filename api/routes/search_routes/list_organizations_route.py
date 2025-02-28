@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Literal
 from api.services import organization_services
+from api.config.ckan_settings import ckan_settings
 
 
 router = APIRouter()
@@ -42,7 +43,7 @@ async def list_organizations(
         description="An optional string to filter organizations by name"
     ),
     server: Literal["local", "global", "pre_ckan"] = Query(
-        "local",
+        "global",
         description=(
             "Specify the server to list organizations from. Defaults to "
             "'local'."
@@ -72,8 +73,26 @@ async def list_organizations(
         If there is an error retrieving the list of organizations, an
         HTTPException is raised with a detailed message.
     """
+    if server == 'pre_ckan' and not ckan_settings.pre_ckan_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-CKAN is disabled and cannot be used."
+        )
+
     try:
         organizations = organization_services.list_organization(name, server)
         return organizations
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Convert the internal CKAN error to a more user-friendly message
+        error_message = str(e)
+
+        if "No scheme supplied" in error_message:
+            # Provide a cleaner explanation for the user
+            raise HTTPException(
+                status_code=400,
+                detail=("Server is not configured or "
+                        "is unreachable.")
+            )
+
+        # Otherwise, return the original error
+        raise HTTPException(status_code=400, detail=error_message)

@@ -4,7 +4,7 @@ from api.config.ckan_settings import ckan_settings
 
 
 def list_organization(name: Optional[str] = None,
-                      server: str = "local") -> List[str]:
+                      server: str = "global") -> List[str]:
     """
     Retrieve a list of all organizations from the specified CKAN server,
     optionally filtered by name.
@@ -15,7 +15,7 @@ def list_organization(name: Optional[str] = None,
         A string to filter organizations by name (case-insensitive).
     server : str
         The CKAN server to use. Can be 'local', 'global', or 'pre_ckan'.
-        Defaults to 'local'.
+        Defaults to 'global'.
 
     Returns
     -------
