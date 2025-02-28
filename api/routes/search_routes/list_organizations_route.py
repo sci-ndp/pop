@@ -3,7 +3,9 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Literal
 from api.services import organization_services
 
+
 router = APIRouter()
+
 
 @router.get(
     "/organization",

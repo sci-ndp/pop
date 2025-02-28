@@ -3,8 +3,8 @@ from typing import List, Optional
 from api.config.ckan_settings import ckan_settings
 
 
-def list_organization(
-    name: Optional[str] = None, server: str = "local") -> List[str]:
+def list_organization(name: Optional[str] = None,
+                      server: str = "local") -> List[str]:
     """
     Retrieve a list of all organizations from the specified CKAN server,
     optionally filtered by name.
