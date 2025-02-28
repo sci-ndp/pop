@@ -77,6 +77,6 @@ async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
         if "No scheme supplied" in error_text:
             raise HTTPException(
                 status_code=400,
-                detail="Pre-CKAN server is not configured or unreachable."
+                detail="Server is not configured or unreachable."
             )
         raise HTTPException(status_code=400, detail=error_text)
