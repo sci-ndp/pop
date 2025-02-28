@@ -1,3 +1,4 @@
+# tests/test_list_organization.py
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 from api.main import app
@@ -14,7 +15,7 @@ def test_list_organizations_no_name():
         response = client.get("/organization")
         assert response.status_code == 200
         assert response.json() == ["org1", "org2", "org3"]
-        mock_list.assert_called_once_with(None)
+        mock_list.assert_called_once_with(None, 'local')
 
 
 def test_list_organizations_with_name():
@@ -26,7 +27,7 @@ def test_list_organizations_with_name():
         response = client.get("/organization", params={"name": "org1"})
         assert response.status_code == 200
         assert response.json() == ["org1"]
-        mock_list.assert_called_once_with("org1")
+        mock_list.assert_called_once_with("org1", 'local')
 
 
 def test_list_organizations_exception():
@@ -42,4 +43,4 @@ def test_list_organizations_exception():
         assert response.json() == {
             "detail": "Error message explaining the bad request"
         }
-        mock_list.assert_called_once_with(None)
+        mock_list.assert_called_once_with(None, 'local')

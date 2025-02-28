@@ -1,18 +1,18 @@
 # api/routes/search_routes/list_organizations_route.py
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
+from typing import List, Optional, Literal
 from api.services import organization_services
 
-
 router = APIRouter()
-
 
 @router.get(
     "/organization",
     response_model=List[str],
     summary="List all organizations",
     description=(
-        "Retrieve a list of all organizations, with optional name filtering."),
+        "Retrieve a list of all organizations, with optional name filtering "
+        "and optional CKAN server selection."
+    ),
     responses={
         200: {
             "description": "A list of all organizations",
@@ -27,7 +27,8 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Error message explaining the bad request"}
+                        "detail": "Error message explaining the bad request"
+                    }
                 }
             }
         }
@@ -35,22 +36,33 @@ router = APIRouter()
 )
 async def list_organizations(
     name: Optional[str] = Query(
-        None, description="An optional string to filter organizations by name"
+        None,
+        description="An optional string to filter organizations by name"
+    ),
+    server: Literal["local", "global", "pre_ckan"] = Query(
+        "local",
+        description=(
+            "Specify the server to list organizations from. Defaults to "
+            "'local'."
+        )
     )
 ):
     """
-    Endpoint to list all organizations. Optionally, filter organizations by a
-    partial name.
+    Endpoint to list all organizations. Optionally, filter organizations
+    by a partial name and specify the CKAN server.
 
     Parameters
     ----------
     name : Optional[str]
         A string to filter organizations by name (case-insensitive).
+    server : Literal['local', 'global', 'pre_ckan']
+        The CKAN server to list organizations from. Defaults to 'local'.
 
     Returns
     -------
     List[str]
-        A list of organization names, optionally filtered by the provided name.
+        A list of organization names, optionally filtered by the provided
+        name.
 
     Raises
     ------
@@ -59,7 +71,7 @@ async def list_organizations(
         HTTPException is raised with a detailed message.
     """
     try:
-        organizations = organization_services.list_organization(name)
+        organizations = organization_services.list_organization(name, server)
         return organizations
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
