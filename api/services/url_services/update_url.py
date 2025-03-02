@@ -12,6 +12,7 @@ RESERVED_KEYS = {
     'collection', 'url', 'mapping', 'processing', 'file_type'
 }
 
+
 async def update_url(
     resource_id: str,
     resource_name: Optional[str] = None,
@@ -113,6 +114,7 @@ async def update_url(
         )
 
     return {"message": "Resource updated successfully"}
+
 
 def validate_manual_processing_info(file_type: str, processing: dict):
     """
