@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query
-from api.services import dataset_services
-from typing import Annotated
+# api/routes/delete_routes/resource_delete_route.py
+# English code comments, PEP-8 lines <=79 chars
 
+from fastapi import APIRouter, HTTPException, Query
+from typing import Annotated, Literal
+from api.services import dataset_services
+from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
@@ -44,32 +47,43 @@ async def delete_resource(
     resource_id: Annotated[
         str,
         Query(description="The ID of the dataset to delete.")
-    ]
+    ],
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    )
 ):
     """
-    Endpoint to delete a resource by its type and name.
+    Endpoint to delete a dataset by its resource_id.
 
-    Parameters
-    ----------
-    resource_id : str
-        The id of the resource to be deleted.
-
-    Returns
-    -------
-    dict
-        A message confirming the deletion of the resource.
-
-    Raises
-    ------
-    HTTPException
-        If there is an error deleting the resource, an HTTPException is
-        raised with a detailed message.
+    If ?server=pre_ckan is provided and pre_ckan is enabled, deletes from
+    the pre-CKAN instance. Otherwise defaults to local CKAN.
     """
     try:
-        dataset_services.delete_dataset(resource_id=resource_id)
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
+        dataset_services.delete_dataset(resource_id=resource_id,
+                                        ckan_instance=ckan_instance)
         return {"message": f"{resource_id} deleted successfully"}
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        if "not found" in error_msg.lower():
+            raise HTTPException(status_code=404, detail="Resource not found")
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(status_code=400, detail=error_msg)
 
 
 @router.delete(
@@ -106,28 +120,41 @@ async def delete_resource(
         }
     }
 )
-async def delete_resource_by_name(resource_name: str):
+async def delete_resource_by_name(
+    resource_name: str,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    )
+):
     """
-    Endpoint to delete a resource by its type and name.
+    Endpoint to delete a dataset by its name.
 
-    Parameters
-    ----------
-    resource_name : str
-        The name of the resource to be deleted.
-
-    Returns
-    -------
-    dict
-        A message confirming the deletion of the resource.
-
-    Raises
-    ------
-    HTTPException
-        If there is an error deleting the resource, an HTTPException is
-        raised with a detailed message.
+    If ?server=pre_ckan is provided and pre_ckan is enabled, deletes from
+    the pre-CKAN instance. Otherwise defaults to local CKAN.
     """
     try:
-        dataset_services.delete_dataset(dataset_name=resource_name)
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
+        dataset_services.delete_dataset(dataset_name=resource_name,
+                                        ckan_instance=ckan_instance)
         return {"message": f"{resource_name} deleted successfully"}
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        if "not found" in error_msg.lower():
+            raise HTTPException(status_code=404, detail="Resource not found")
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(status_code=400, detail=error_msg)
