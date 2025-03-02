@@ -9,6 +9,7 @@ from api.config import ckan_settings
 
 router = APIRouter()
 
+
 @router.post(
     "/url",
     response_model=dict,
@@ -63,8 +64,8 @@ async def create_url_resource(
     """
     Add a URL resource to CKAN.
 
-    If server='pre_ckan', uses the pre-CKAN instance if enabled. Otherwise, 
-    defaults to local CKAN. A 400 error is returned if pre_ckan is disabled 
+    If server='pre_ckan', uses the pre-CKAN instance if enabled. Otherwise,
+    defaults to local CKAN. A 400 error is returned if pre_ckan is disabled
     or the URL has no valid scheme.
 
     Parameters
@@ -84,7 +85,7 @@ async def create_url_resource(
     Raises
     ------
     HTTPException
-        - 400: If there's an error creating the resource, or if pre_ckan 
+        - 400: If there's an error creating the resource, or if pre_ckan
           is disabled, or if there's no valid scheme.
     """
     try:
