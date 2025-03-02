@@ -1,4 +1,5 @@
 # api/routes/register_routes/post_kafka.py
+# Code in English, PEP-8 lines <=79 chars
 
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from typing import Dict, Any, Literal
@@ -103,18 +104,40 @@ async def create_kafka_datasource(
     """
     Add a Kafka topic and its associated metadata to the system.
 
-    If ?server=pre_ckan is passed, this will be handled in the next commit.
-    For now, we only handle ?server=local or no server param at all.
-    """
-    if server == "pre_ckan":
-        raise HTTPException(
-            status_code=400,
-            detail="Pre-CKAN logic not yet implemented."
-        )
+    If ?server=pre_ckan, uses the pre-CKAN instance. If pre_ckan_enabled is
+    False or the URL lacks a valid scheme, returns a 400 error. Otherwise,
+    it defaults to local CKAN.
 
+    Parameters
+    ----------
+    data : KafkaDataSourceRequest
+        Required/optional parameters for creating a Kafka dataset/resource.
+    server : Literal['local', 'pre_ckan']
+        If not provided, defaults to 'local'.
+    _ : Dict[str, Any]
+        Keycloak user auth (unused).
+
+    Returns
+    -------
+    dict
+        A dictionary containing the ID of the created dataset if successful.
+
+    Raises
+    ------
+    HTTPException
+        - 409: Duplicate dataset
+        - 400: Other errors (including "No scheme supplied" for pre_ckan)
+    """
     try:
-        # Default or 'local'
-        ckan_instance = ckan_settings.ckan
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
 
         dataset_id = kafka_services.add_kafka(
             dataset_name=data.dataset_name,
@@ -131,15 +154,22 @@ async def create_kafka_datasource(
         )
         return {"id": dataset_id}
 
-    except Exception as e:
-        error_msg = str(e)
+    except Exception as exc:
+        error_msg = str(exc)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
         if ("That URL is already in use" in error_msg
                 or "That name is already in use" in error_msg):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={
                     "error": "Duplicate Dataset",
-                    "detail": "A dataset with this name or URL already exists."
+                    "detail": (
+                        "A dataset with this name or URL already exists."
+                    )
                 }
             )
         raise HTTPException(
