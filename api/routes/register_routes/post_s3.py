@@ -9,6 +9,7 @@ from api.config import ckan_settings
 
 router = APIRouter()
 
+
 @router.post(
     "/s3",
     response_model=dict,
@@ -51,8 +52,8 @@ async def create_s3_resource(
     """
     Add an S3 resource to CKAN.
 
-    If server='pre_ckan', uses the pre-CKAN instance (if enabled). If 
-    the URL has no valid scheme, returns a friendly error. Otherwise, 
+    If server='pre_ckan', uses the pre-CKAN instance (if enabled). If
+    the URL has no valid scheme, returns a friendly error. Otherwise,
     defaults to local CKAN.
 
     Parameters
