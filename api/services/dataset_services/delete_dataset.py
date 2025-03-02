@@ -2,6 +2,7 @@
 from ckanapi import NotFound
 from api.config.ckan_settings import ckan_settings
 
+
 def delete_dataset(
     dataset_name: str = None,
     resource_id: str = None,

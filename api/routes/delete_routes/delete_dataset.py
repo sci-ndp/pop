@@ -8,6 +8,7 @@ from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
+
 @router.delete(
     "/resource",
     response_model=dict,
