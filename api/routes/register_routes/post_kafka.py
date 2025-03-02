@@ -160,7 +160,7 @@ async def create_kafka_datasource(
         if "No scheme supplied" in error_msg:
             raise HTTPException(
                 status_code=400,
-                detail="Pre-CKAN server is not configured or unreachable."
+                detail="Server is not configured or unreachable."
             )
         if ("That URL is already in use" in error_msg
                 or "That name is already in use" in error_msg):
