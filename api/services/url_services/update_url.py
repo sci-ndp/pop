@@ -1,15 +1,16 @@
+# api/services/url_services/update_url.py
+
 import json
 from typing import Any, Dict, Optional
-
 from api.config.ckan_settings import ckan_settings
 import logging
 
 logger = logging.getLogger(__name__)
-# Define a set of reserved keys that should not be used in the extras
+
 RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources',
-    'collection', 'url', 'mapping', 'processing', 'file_type'}
-
+    'collection', 'url', 'mapping', 'processing', 'file_type'
+}
 
 async def update_url(
     resource_id: str,
@@ -22,38 +23,44 @@ async def update_url(
     extras: Optional[Dict[str, str]] = None,
     mapping: Optional[Dict[str, str]] = None,
     processing: Optional[Dict[str, Any]] = None,
+    ckan_instance=None  # new optional param for server selection
 ):
-    ckan = ckan_settings.ckan
+    """
+    Update an existing URL resource in CKAN, allowing a custom ckan_instance.
+    If ckan_instance is None, defaults to ckan_settings.ckan.
+    """
+
+    if ckan_instance is None:
+        ckan_instance = ckan_settings.ckan
 
     # Fetch the existing resource data
     try:
-        resource = ckan.action.package_show(id=resource_id)
+        resource = ckan_instance.action.package_show(id=resource_id)
     except Exception as e:
         raise Exception(
-            f"Error fetching resource with ID {resource_id}: {str(e)}")
+            f"Error fetching resource with ID {resource_id}: {str(e)}"
+        )
 
     # Extract current file type and processing from the resource
     current_extras = {
-        extra['key']: extra['value'] for extra in resource.get('extras', [])}
+        extra['key']: extra['value']
+        for extra in resource.get('extras', [])
+    }
     current_file_type = current_extras.get("file_type")
     current_processing = json.loads(current_extras.get("processing", "{}"))
 
-    # Validate the processing information based on whether the file type
-    # has changed or not
+    # Validate or update the processing info if the file type changes
     if file_type and file_type != current_file_type:
-        # If the file type has changed
         if processing is not None:
-            # Even if processing is an empty dict, it should be used to
-            # update the resource
-            processing = validate_manual_processing_info(
-                file_type, processing)
+            processing = validate_manual_processing_info(file_type, processing)
         else:
             processing = validate_manual_processing_info(
-                file_type, current_processing)
+                file_type, current_processing
+            )
     elif processing is not None:
-        # If the file type hasn't changed but processing info is provided
         processing = validate_manual_processing_info(
-            current_file_type, processing)
+            current_file_type, processing
+        )
 
     # Preserve existing resource fields
     updated_data = {
@@ -61,55 +68,56 @@ async def update_url(
         'title': resource_title or resource['title'],
         'owner_org': owner_org or resource['owner_org'],
         'notes': notes or resource['notes'],
-        'resources': resource['resources'],  # Preserve the existing resources
-        'extras': resource.get('extras', [])  # Keep existing extras
+        'resources': resource['resources'],
+        'extras': resource.get('extras', [])
     }
 
-    # Merge new extras with existing extras, ensuring no data loss
+    # Merge new extras with existing extras
     if extras:
         if RESERVED_KEYS.intersection(extras):
             raise KeyError(
                 "Extras contain reserved keys: "
-                f"{RESERVED_KEYS.intersection(extras)}")
+                f"{RESERVED_KEYS.intersection(extras)}"
+            )
         current_extras.update(extras)
 
-    # Update the extras with new mapping, processing, and file type if provided
+    # Update extras with new mapping, processing, file_type if provided
     if file_type:
         current_extras['file_type'] = file_type
     if mapping:
         current_extras['mapping'] = json.dumps(mapping)
     if processing is not None:
-        # If processing is explicitly provided (even if empty), update it
         current_extras['processing'] = json.dumps(processing)
 
-    # Convert the merged extras back to CKAN format
     updated_data['extras'] = [
-        {'key': k, 'value': v} for k, v in current_extras.items()]
+        {'key': k, 'value': v} for k, v in current_extras.items()
+    ]
 
     # Perform the update
     try:
-        ckan.action.package_update(id=resource_id, **updated_data)
+        ckan_instance.action.package_update(id=resource_id, **updated_data)
 
         # Update the resource URL if it has changed
         if resource_url:
             for res in resource['resources']:
                 if res['format'].lower() == 'url':
-                    ckan.action.resource_update(
-                        id=res['id'], url=resource_url, package_id=resource_id)
+                    ckan_instance.action.resource_update(
+                        id=res['id'],
+                        url=resource_url,
+                        package_id=resource_id
+                    )
                     break
     except Exception as e:
         raise Exception(
-            f"Error updating resource with ID {resource_id}: {str(e)}")
+            f"Error updating resource with ID {resource_id}: {str(e)}"
+        )
 
     return {"message": "Resource updated successfully"}
-
 
 def validate_manual_processing_info(file_type: str, processing: dict):
     """
     Manually validate the processing information based on the file type.
     """
-
-    # Define expected fields for each file type
     expected_fields = {
         "stream": {"refresh_rate", "data_key"},
         "CSV": {"delimiter", "header_line", "start_line", "comment_char"},
@@ -117,32 +125,26 @@ def validate_manual_processing_info(file_type: str, processing: dict):
         "JSON": {"info_key", "additional_key", "data_key"},
         "NetCDF": {"group"}
     }
-
     required_fields = {
         "CSV": {"delimiter", "header_line", "start_line"},
         "TXT": {"delimiter", "header_line", "start_line"},
-        # No required fields for the other types as they're all optional
     }
 
-    # Get the expected fields for the current file type
     expected = expected_fields.get(file_type)
     required = required_fields.get(file_type, set())
 
-    # Check for unexpected fields in the provided processing info
-    unexpected_fields = set(processing.keys()) - expected
-
+    unexpected_fields = set(processing.keys()) - (expected or set())
     if unexpected_fields:
         raise ValueError(
-            "Unexpected fields in processing for"
-            f" {file_type}: {unexpected_fields}")
+            f"Unexpected fields in processing for {file_type}: "
+            f"{unexpected_fields}"
+        )
 
-    # Check for missing required fields
     missing_required_fields = required - set(processing.keys())
-
     if missing_required_fields:
         raise ValueError(
-            f"Missing required fields in processing for "
-            f"{file_type}: {missing_required_fields}")
+            f"Missing required fields in processing for {file_type}: "
+            f"{missing_required_fields}"
+        )
 
-    # If it passes all checks, return the validated processing info
     return processing
