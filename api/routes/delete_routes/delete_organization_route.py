@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
+# api/routes/delete_routes/delete_organization_route.py
 
+from fastapi import APIRouter, HTTPException, Query
+from typing import Literal
 from api.services import organization_services
-
+from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
@@ -12,7 +14,8 @@ router = APIRouter()
     summary="Delete an organization",
     description=(
         "Delete an organization from CKAN by its name, including "
-        "all associated datasets and resources."),
+        "all associated datasets and resources."
+    ),
     responses={
         200: {
             "description": "Organization deleted successfully",
@@ -27,7 +30,8 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Error message explaining the bad request"}
+                        "detail": "Error message explaining the bad request"
+                    }
                 }
             }
         },
@@ -41,28 +45,46 @@ router = APIRouter()
         }
     }
 )
-async def delete_organization(organization_name: str):
+async def delete_organization(
+    organization_name: str,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    )
+):
     """
     Endpoint to delete an organization in CKAN by its name.
 
-    Parameters
-    ----------
-    organization_name : str
-        The name of the organization to be deleted.
-
-    Returns
-    -------
-    dict
-        A message confirming the deletion of the organization.
-
-    Raises
-    ------
-    HTTPException
-        If there is an error deleting the organization, an HTTPException is
-        raised with a detailed message.
+    If ?server=pre_ckan is used, it will delete from the pre-CKAN instance
+    if enabled. Returns a 400 error if pre_ckan is disabled or missing a
+    valid scheme. Raises a 404 if the organization does not exist.
     """
     try:
-        organization_services.delete_organization(organization_name)
+        # Determine which CKAN instance to use
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
+        organization_services.delete_organization(
+            organization_name=organization_name,
+            ckan_instance=ckan_instance
+        )
         return {"message": "Organization deleted successfully"}
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        if "Organization not found" in error_msg:
+            raise HTTPException(
+                status_code=404, detail="Organization not found")
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(status_code=400, detail=error_msg)
