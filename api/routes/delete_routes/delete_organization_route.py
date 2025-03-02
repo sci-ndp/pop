@@ -7,6 +7,7 @@ from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
+
 @router.delete(
     "/organization/{organization_name}",
     response_model=dict,
@@ -79,7 +80,8 @@ async def delete_organization(
     except Exception as e:
         error_msg = str(e)
         if "Organization not found" in error_msg:
-            raise HTTPException(status_code=404, detail="Organization not found")
+            raise HTTPException(
+                status_code=404, detail="Organization not found")
         if "No scheme supplied" in error_msg:
             raise HTTPException(
                 status_code=400,

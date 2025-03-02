@@ -2,6 +2,7 @@
 from ckanapi import NotFound
 from api.config.ckan_settings import ckan_settings
 
+
 def delete_organization(
     organization_name: str,
     ckan_instance=None  # new optional parameter

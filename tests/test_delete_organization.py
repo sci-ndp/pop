@@ -13,6 +13,7 @@ pytestmark = pytest.mark.skipif(
 
 client = TestClient(app)
 
+
 def test_delete_organization_success():
     """
     Test that an organization is successfully deleted, returning 200.
@@ -34,6 +35,7 @@ def test_delete_organization_success():
             ckan_instance=ANY
         )
 
+
 def test_delete_organization_not_found():
     """
     Test that a non-existent organization returns a 404 status.
@@ -53,6 +55,7 @@ def test_delete_organization_not_found():
             organization_name=organization_name,
             ckan_instance=ANY
         )
+
 
 def test_delete_organization_error():
     """
