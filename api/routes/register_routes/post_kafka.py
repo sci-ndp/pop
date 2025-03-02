@@ -168,7 +168,7 @@ async def create_kafka_datasource(
                 detail={
                     "error": "Duplicate Dataset",
                     "detail": (
-                        "A dataset with this name or URL already exists."
+                        "A dataset with the given name or URL already exists."
                     )
                 }
             )
