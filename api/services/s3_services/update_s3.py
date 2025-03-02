@@ -7,6 +7,7 @@ RESERVED_KEYS = {
     'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection'
 }
 
+
 async def update_s3(
     resource_id: str,
     resource_name: Optional[str] = None,

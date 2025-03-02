@@ -9,6 +9,7 @@ from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
+
 @router.put(
     "/s3/{resource_id}",
     response_model=dict,
