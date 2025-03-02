@@ -10,6 +10,7 @@ from api.config import ckan_settings
 
 router = APIRouter()
 
+
 @router.post(
     "/kafka",
     response_model=dict,
