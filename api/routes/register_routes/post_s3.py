@@ -51,14 +51,18 @@ async def create_s3_resource(
     """
     Add an S3 resource to CKAN.
 
+    If server='pre_ckan', uses the pre-CKAN instance (if enabled). If 
+    the URL has no valid scheme, returns a friendly error. Otherwise, 
+    defaults to local CKAN.
+
     Parameters
     ----------
     data : S3Request
         Required parameters for creating an S3 resource.
     server : Literal['local', 'pre_ckan']
-        Optional query param. If omitted, defaults to 'local'.
+        Optional query param. Defaults to 'local'.
     _ : Dict[str, Any]
-        User authentication details from Keycloak (unused here).
+        User authentication details from Keycloak (unused).
 
     Returns
     -------
@@ -68,19 +72,18 @@ async def create_s3_resource(
     Raises
     ------
     HTTPException
-        400: If there's an error creating the resource or invalid param.
+        - 400: If there's an error creating the resource or invalid param.
     """
-    # For now, if server == 'pre_ckan', raise a placeholder error
-    # We'll implement the actual logic in the next commit.
-    if server == "pre_ckan":
-        raise HTTPException(
-            status_code=400,
-            detail="Pre-CKAN logic not yet implemented."
-        )
-
     try:
-        # Default or 'local'
-        ckan_instance = ckan_settings.ckan
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
 
         resource_id = add_s3(
             resource_name=data.resource_name,
@@ -104,7 +107,13 @@ async def create_s3_resource(
             detail=f"Invalid input: {str(e)}"
         )
     except Exception as e:
+        error_msg = str(e)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
         raise HTTPException(
             status_code=400,
-            detail=str(e)
+            detail=error_msg
         )
