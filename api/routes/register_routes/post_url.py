@@ -24,7 +24,7 @@ router = APIRouter()
         "- **file_type**: The file type (`stream`, `CSV`, `TXT`, `JSON`, "
         "`NetCDF`).\n"
         "- **notes**: Additional notes (optional).\n"
-        "- **extras**: Additional metadata as extras (optional).\n"
+        "- **extras**: Additional metadata (optional).\n"
         "- **mapping**: Mapping info (optional).\n"
         "- **processing**: Processing info (optional).\n\n"
         "### Selecting the Server\n"
@@ -63,6 +63,10 @@ async def create_url_resource(
     """
     Add a URL resource to CKAN.
 
+    If server='pre_ckan', uses the pre-CKAN instance if enabled. Otherwise, 
+    defaults to local CKAN. A 400 error is returned if pre_ckan is disabled 
+    or the URL has no valid scheme.
+
     Parameters
     ----------
     data : URLRequest
@@ -80,19 +84,19 @@ async def create_url_resource(
     Raises
     ------
     HTTPException
-        - 400: If there's an error creating the resource.
+        - 400: If there's an error creating the resource, or if pre_ckan 
+          is disabled, or if there's no valid scheme.
     """
-    # For now, if server='pre_ckan', raise a placeholder error
-    # We'll implement the logic in the next commit.
-    if server == "pre_ckan":
-        raise HTTPException(
-            status_code=400,
-            detail="Pre-CKAN logic not yet implemented."
-        )
-
     try:
-        # If server='local' or not provided
-        ckan_instance = ckan_settings.ckan
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
 
         resource_id = add_url(
             resource_name=data.resource_name,
@@ -119,7 +123,13 @@ async def create_url_resource(
             detail=f"Invalid input: {str(e)}"
         )
     except Exception as e:
+        error_msg = str(e)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
         raise HTTPException(
             status_code=400,
-            detail=str(e)
+            detail=error_msg
         )
