@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+# api/routes/update_routes/put_s3.py
+
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Dict, Any, Literal
 from api.services.s3_services.update_s3 import update_s3
 from api.models.update_s3_model import S3ResourceUpdateRequest
-from typing import Dict, Any
-
 from api.services.keycloak_services.get_current_user import get_current_user
-
+from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
@@ -14,25 +15,26 @@ router = APIRouter()
     response_model=dict,
     status_code=status.HTTP_200_OK,
     summary="Update an existing S3 resource",
-    description="""
-Update an existing S3 resource and its associated metadata.
-
-### Optional Fields
-- **resource_name**: The unique name of the resource to be updated.
-- **resource_title**: The title of the resource to be updated.
-- **owner_org**: The ID of the organization to which the resource belongs.
-- **resource_s3**: The S3 URL of the resource.
-- **notes**: Additional notes about the resource.
-- **extras**: Additional metadata to be updated or added to the resource.
-
-### Example Payload
-```json
-{
-    "resource_name": "updated_resource_name",
-    "resource_s3": "http://new-s3-url.com/resource"
-}
-```
-""",
+    description=(
+        "Update an existing S3 resource and its associated metadata.\n\n"
+        "### Optional Fields\n"
+        "- **resource_name**: The unique name of the resource.\n"
+        "- **resource_title**: The title of the resource.\n"
+        "- **owner_org**: The ID of the organization.\n"
+        "- **resource_s3**: The S3 URL of the resource.\n"
+        "- **notes**: Additional notes.\n"
+        "- **extras**: Additional metadata.\n\n"
+        "### Query Parameter\n"
+        "Use `?server=local` or `?server=pre_ckan` to choose which CKAN "
+        "instance to update. Defaults to 'local' if not provided.\n\n"
+        "### Example Payload\n"
+        "```json\n"
+        "{\n"
+        '    "resource_name": "updated_resource_name",\n'
+        '    "resource_s3": "http://new-s3-url.com/resource"\n'
+        "}\n"
+        "```\n"
+    ),
     responses={
         200: {
             "description": "S3 resource updated successfully",
@@ -47,7 +49,9 @@ Update an existing S3 resource and its associated metadata.
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Error updating S3 resource: <error message>"
+                        "detail": (
+                            "Error updating S3 resource: <error message>"
+                        )
                     }
                 }
             }
@@ -62,22 +66,57 @@ Update an existing S3 resource and its associated metadata.
         }
     }
 )
-async def update_s3_resource(resource_id: str,
-                             data: S3ResourceUpdateRequest,
-                             _: Dict[str, Any] = Depends(get_current_user)):
+async def update_s3_resource(
+    resource_id: str,
+    data: S3ResourceUpdateRequest,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
+    _: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Update an existing S3 resource in CKAN.
+
+    If ?server=pre_ckan is used and pre_ckan is enabled/configured,
+    updates the resource in the pre-CKAN instance. Otherwise defaults
+    to local CKAN. Returns a 400 error if pre_ckan is disabled or
+    missing a valid scheme.
+    """
     try:
-        updated = await update_s3(
+        # Determine CKAN instance
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
+        updated_id = await update_s3(
             resource_id=resource_id,
             resource_name=data.resource_name,
             resource_title=data.resource_title,
             owner_org=data.owner_org,
             resource_s3=data.resource_s3,
             notes=data.notes,
-            extras=data.extras
+            extras=data.extras,
+            ckan_instance=ckan_instance
         )
-        if not updated:
+        if not updated_id:
             raise HTTPException(
-                status_code=404, detail="S3 resource not found")
+                status_code=404,
+                detail="S3 resource not found"
+            )
         return {"message": "S3 resource updated successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception as exc:
+        error_msg = str(exc)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(status_code=400, detail=error_msg)
