@@ -9,6 +9,7 @@ from api.config import ckan_settings
 
 router = APIRouter()
 
+
 @router.put(
     "/kafka/{dataset_id}",
     response_model=dict,
@@ -41,7 +42,8 @@ router = APIRouter()
             "description": "Kafka dataset updated successfully",
             "content": {
                 "application/json": {
-                    "example": {"message": "Kafka dataset updated successfully"}
+                    "example": {
+                        "message": "Kafka dataset updated successfully"}
                 }
             }
         },

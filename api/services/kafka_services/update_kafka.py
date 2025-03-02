@@ -9,6 +9,7 @@ RESERVED_KEYS = {
     'collection', 'host', 'port', 'topic', 'mapping', 'processing'
 }
 
+
 def update_kafka(
     dataset_id: str,
     dataset_name: Optional[str] = None,
