@@ -1,11 +1,11 @@
 # api/routes/register_routes/post_url.py
-from fastapi import APIRouter, HTTPException, status, Depends
+
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Dict, Any, Literal
 from api.services.url_services.add_url import add_url
 from api.models.urlrequest_model import URLRequest
-from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config import ckan_settings  # Import the CKAN settings
-
+from api.config import ckan_settings
 
 router = APIRouter()
 
@@ -18,19 +18,19 @@ router = APIRouter()
     description=(
         "Create a new URL resource in CKAN.\n\n"
         "### Common Fields for All File Types\n"
-        "- **resource_name**: The unique name of the resource to be created.\n"
-        "- **resource_title**: The title of the resource to be created.\n"
-        "- **owner_org**: The ID of the organization to which the resource "
-        "belongs.\n"
-        "- **resource_url**: The URL of the resource to be added.\n"
-        "- **file_type**: The type of the file (`stream`, `CSV`, `TXT`, "
-        "`JSON`, `NetCDF`).\n"
-        "- **notes**: Additional notes about the resource (optional).\n"
-        "- **extras**: Additional metadata to be added to the resource "
-        "package as extras (optional).\n"
-        "- **mapping**: Mapping information for the dataset (optional).\n"
-        "- **processing**: Processing information for the "
-        "dataset (optional).\n"
+        "- **resource_name**: The unique name of the resource.\n"
+        "- **resource_title**: The title of the resource.\n"
+        "- **owner_org**: The ID of the organization.\n"
+        "- **resource_url**: The URL of the resource.\n"
+        "- **file_type**: The file type (`stream`, `CSV`, `TXT`, `JSON`, "
+        "`NetCDF`).\n"
+        "- **notes**: Additional notes (optional).\n"
+        "- **extras**: Additional metadata (optional).\n"
+        "- **mapping**: Mapping info (optional).\n"
+        "- **processing**: Processing info (optional).\n\n"
+        "### Selecting the Server\n"
+        "Use `?server=local` or `?server=pre_ckan` to pick the CKAN instance. "
+        "Defaults to 'local' if not provided.\n"
     ),
     responses={
         201: {
@@ -55,32 +55,46 @@ router = APIRouter()
 )
 async def create_url_resource(
     data: URLRequest,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
     _: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Add a URL resource to CKAN.
 
+    If server='pre_ckan', uses the pre-CKAN instance if enabled. Otherwise,
+    defaults to local CKAN. A 400 error is returned if pre_ckan is disabled
+    or the URL has no valid scheme.
+
     Parameters
     ----------
     data : URLRequest
-        An object containing all the required parameters for creating a
-        URL resource.
+        Required fields for creating a URL resource.
+    server : Literal['local', 'pre_ckan']
+        Optional query param. Defaults to 'local'.
+    _ : Dict[str, Any]
+        Keycloak user auth details (unused).
 
     Returns
     -------
     dict
-        A dictionary containing the ID of the created resource if
-        successful.
+        A dictionary containing the ID of the created resource if successful.
 
     Raises
     ------
     HTTPException
-        If there is an error creating the resource, an HTTPException is
-        raised with a detailed message.
+        - 400: If there's an error creating the resource, or if pre_ckan
+          is disabled, or if there's no valid scheme.
     """
     try:
-        # Choose the CKAN instance based on pre_ckan_enabled
-        if ckan_settings.pre_ckan_enabled:
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan
@@ -95,7 +109,7 @@ async def create_url_resource(
             extras=data.extras,
             mapping=data.mapping,
             processing=data.processing,
-            ckan_instance=ckan_instance  # Pass the CKAN instance
+            ckan_instance=ckan_instance
         )
         return {"id": resource_id}
 
@@ -110,7 +124,13 @@ async def create_url_resource(
             detail=f"Invalid input: {str(e)}"
         )
     except Exception as e:
+        error_msg = str(e)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
         raise HTTPException(
             status_code=400,
-            detail=str(e)
+            detail=error_msg
         )
