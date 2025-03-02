@@ -1,11 +1,12 @@
 # api/routes/register_routes/post_kafka.py
-from fastapi import APIRouter, HTTPException, status, Depends
+# Code in English, PEP-8 lines <=79 chars
+
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Dict, Any, Literal
 from api.services import kafka_services
 from api.models.request_kafka_model import KafkaDataSourceRequest
-from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config import ckan_settings  # Import the settings
-
+from api.config import ckan_settings
 
 router = APIRouter()
 
@@ -25,15 +26,14 @@ router = APIRouter()
         "- **kafka_topic**: The Kafka topic name.\n"
         "- **kafka_host**: The Kafka host.\n"
         "- **kafka_port**: The Kafka port.\n"
-        "- **dataset_description**: A description of the dataset "
-        "(optional).\n"
-        "- **extras**: Additional metadata to be added to the dataset as "
-        "extras (optional).\n"
-        "- **mapping**: Mapping information for the dataset. For selecting "
-        "the desired fields to send and how they will be named "
-        "(optional).\n"
+        "- **dataset_description**: A description of the dataset (optional).\n"
+        "- **extras**: Additional metadata as CKAN extras (optional).\n"
+        "- **mapping**: Mapping information for the dataset (optional).\n"
         "- **processing**: Processing information for the dataset "
         "(optional).\n\n"
+        "### Selecting the Server\n"
+        "Pass `?server=local` or `?server=pre_ckan` in the query string.\n"
+        "If not provided, defaults to 'local'.\n\n"
         "### Example Payload\n"
         "{\n"
         '    \"dataset_name\": \"kafka_topic_example\",\n'
@@ -42,8 +42,7 @@ router = APIRouter()
         '    \"kafka_topic\": \"example_topic\",\n'
         '    \"kafka_host\": \"kafka_host\",\n'
         '    \"kafka_port\": \"kafka_port\",\n'
-        '    \"dataset_description\": \"This is an example Kafka topic '
-        'registered as a system dataset.\",\n'
+        '    \"dataset_description\": \"Example Kafka topic.\",\n'
         '    \"extras\": {\n'
         '        \"key1\": \"value1\",\n'
         '        \"key2\": \"value2\"\n'
@@ -74,8 +73,10 @@ router = APIRouter()
                     "example": {
                         "detail": {
                             "error": "Duplicate Dataset",
-                            "detail": "A dataset with the given name or "
-                            "URL already exists."
+                            "detail": (
+                                "A dataset with the given name or URL "
+                                "already exists."
+                            )
                         }
                     }
                 }
@@ -86,9 +87,7 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": (
-                            "Error creating Kafka dataset: <error message>"
-                        )
+                        "detail": "Error creating Kafka dataset: <error>"
                     }
                 }
             }
@@ -97,32 +96,46 @@ router = APIRouter()
 )
 async def create_kafka_datasource(
     data: KafkaDataSourceRequest,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
     _: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Add a Kafka topic and its associated metadata to the system.
 
+    If ?server=pre_ckan, uses the pre-CKAN instance. If pre_ckan_enabled is
+    False or the URL lacks a valid scheme, returns a 400 error. Otherwise,
+    it defaults to local CKAN.
+
     Parameters
     ----------
     data : KafkaDataSourceRequest
-        An object containing all the required parameters for creating a
-        Kafka dataset and resource.
+        Required/optional parameters for creating a Kafka dataset/resource.
+    server : Literal['local', 'pre_ckan']
+        If not provided, defaults to 'local'.
+    _ : Dict[str, Any]
+        Keycloak user auth (unused).
 
     Returns
     -------
     dict
-        A dictionary containing the ID of the created dataset if
-        successful.
+        A dictionary containing the ID of the created dataset if successful.
 
     Raises
     ------
     HTTPException
-        If there is an error creating the dataset or resource, an
-        HTTPException is raised with a detailed message.
+        - 409: Duplicate dataset
+        - 400: Other errors (including "No scheme supplied" for pre_ckan)
     """
     try:
-        # Determine which CKAN instance to use
-        if ckan_settings.pre_ckan_enabled:
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan
@@ -141,16 +154,26 @@ async def create_kafka_datasource(
             ckan_instance=ckan_instance
         )
         return {"id": dataset_id}
-    except Exception as e:
-        if "That URL is already in use" in str(e) \
-           or "That name is already in use" in str(e):
+
+    except Exception as exc:
+        error_msg = str(exc)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Server is not configured or unreachable."
+            )
+        if ("That URL is already in use" in error_msg
+                or "That name is already in use" in error_msg):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={
                     "error": "Duplicate Dataset",
-                    "detail": "A dataset with the given name or URL "
-                              "already exists."
+                    "detail": (
+                        "A dataset with the given name or URL already exists."
+                    )
                 }
             )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg
+        )
