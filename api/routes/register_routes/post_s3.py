@@ -1,28 +1,30 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+# api/routes/register_routes/post_s3.py
+
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Dict, Any, Literal
 from api.services.s3_services.add_s3 import add_s3
 from api.models.s3request_model import S3Request
-from typing import Dict, Any
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config import ckan_settings  # Import the settings
-
+from api.config import ckan_settings
 
 router = APIRouter()
-
 
 @router.post(
     "/s3",
     response_model=dict,
     status_code=status.HTTP_201_CREATED,
     summary="Add a new S3 resource",
-    description="Create a new S3 resource.",
+    description=(
+        "Create a new S3 resource.\n\n"
+        "Use `?server=local` or `?server=pre_ckan` to choose the CKAN "
+        "instance. Defaults to 'local' if not provided."
+    ),
     responses={
         201: {
             "description": "Resource created successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "12345678-abcd-efgh-ijkl-1234567890ab"
-                    }
+                    "example": {"id": "12345678-abcd-efgh-ijkl-1234567890ab"}
                 }
             }
         },
@@ -40,6 +42,10 @@ router = APIRouter()
 )
 async def create_s3_resource(
     data: S3Request,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
     _: Dict[str, Any] = Depends(get_current_user)
 ):
     """
@@ -48,27 +54,33 @@ async def create_s3_resource(
     Parameters
     ----------
     data : S3Request
-        An object containing all the required parameters for creating an
-        S3 resource.
+        Required parameters for creating an S3 resource.
+    server : Literal['local', 'pre_ckan']
+        Optional query param. If omitted, defaults to 'local'.
+    _ : Dict[str, Any]
+        User authentication details from Keycloak (unused here).
 
     Returns
     -------
     dict
-        A dictionary containing the ID of the created resource if
-        successful.
+        A dictionary containing the ID of the created resource if successful.
 
     Raises
     ------
     HTTPException
-        If there is an error creating the resource, an HTTPException is
-        raised with a detailed message.
+        400: If there's an error creating the resource or invalid param.
     """
+    # For now, if server == 'pre_ckan', raise a placeholder error
+    # We'll implement the actual logic in the next commit.
+    if server == "pre_ckan":
+        raise HTTPException(
+            status_code=400,
+            detail="Pre-CKAN logic not yet implemented."
+        )
+
     try:
-        # Determine which CKAN instance to use
-        if ckan_settings.pre_ckan_enabled:
-            ckan_instance = ckan_settings.pre_ckan
-        else:
-            ckan_instance = ckan_settings.ckan
+        # Default or 'local'
+        ckan_instance = ckan_settings.ckan
 
         resource_id = add_s3(
             resource_name=data.resource_name,
@@ -77,9 +89,10 @@ async def create_s3_resource(
             resource_s3=data.resource_s3,
             notes=data.notes,
             extras=data.extras,
-            ckan_instance=ckan_instance  # Pass the instance here
+            ckan_instance=ckan_instance
         )
         return {"id": resource_id}
+
     except KeyError as e:
         raise HTTPException(
             status_code=400,
