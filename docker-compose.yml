@@ -15,6 +15,7 @@ services:
       - ./static:/code/static
     environment:
       - PYTHONPATH=/code
+      - KUBECONFIG=/code/env_variables/.kubeconfig
     networks:
       - backend
     # Add a step to install dependencies before starting the server

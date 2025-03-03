@@ -1,3 +1,4 @@
+import os
 import time
 import yaml
 from pathlib import Path
@@ -5,9 +6,33 @@ from typing import Optional
 from kubernetes import client, config
 
 
+def get_kubeconfig_path() -> str:
+    """
+    Determine the path to the kubeconfig file, prioritizing environment variables and mounted paths.
+    Falls back to a default location if not found.
+    """
+    # Check if KUBECONFIG environment variable is set
+    kubeconfig_from_env = os.environ.get("KUBECONFIG")
+    print(f"KUBECONFIG environment variable: {kubeconfig_from_env}")
+    if kubeconfig_from_env and os.path.exists(kubeconfig_from_env):
+        return kubeconfig_from_env
+
+    # Default path inside the Docker container (mounted from env_variables)
+    default_kubeconfig_path = "/code/env_variables/.kubeconfig"  # Adjust filename if necessary (e.g., "kubeconfig" or "config")
+
+    if os.path.exists(default_kubeconfig_path):
+        return default_kubeconfig_path
+
+    # If not found, raise an exception or log a warning
+    raise FileNotFoundError(
+        f"Kubeconfig file not found at {default_kubeconfig_path}. "
+        "Please ensure the file exists in the env_variables folder and is mounted correctly in the Docker container, "
+        "or set the KUBECONFIG environment variable."
+    )
+
 # Load kubeconfig (assumes service runs with cluster access)
 # Specify the custom kubeconfig path
-kubeconfig_path = str(Path(__file__).parent / "k8s" / "config")
+kubeconfig_path = get_kubeconfig_path()
 try:
     config.load_kube_config(config_file=kubeconfig_path)
     # config.load_kube_config() # Load default kubeconfig
