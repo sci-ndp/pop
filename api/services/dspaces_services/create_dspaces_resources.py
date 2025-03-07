@@ -115,18 +115,46 @@ def apply_manifest(api_client, manifest, namespace=None):
 
     print(f"Successfully applied {kind} '{name}'")
 
-def get_loadbalancer_url(api_instance, namespace, service_name="nginx-ingress-ingress-nginx-controller", ingress_namespace="ingress-nginx", timeout=300):
-    print(f"Waiting for LoadBalancer endpoint for service '{service_name}' in namespace '{ingress_namespace}'...")
+
+def get_loadbalancer_url(networking_api_instance, api_instance, namespace, ingress_name, 
+                         service_name="nginx-ingress-ingress-nginx-controller", 
+                         ingress_namespace="ingress-nginx", timeout=300):
+    
+    # Try to retrieve the domain from the Ingress with retries
+    domain = None
+    retries = 5
+    delay = 2
+    print(f"Attempting to retrieve domain from Ingress '{ingress_name}' in namespace '{namespace}'...")
+    for attempt in range(retries):
+        try:
+            ingress = networking_api_instance.read_namespaced_ingress(name=ingress_name, namespace=namespace)
+            domain = ingress.spec.rules[0].host if ingress.spec.rules else None
+            if domain:
+                print(f"Retrieved domain '{domain}' from Ingress '{ingress_name}'")
+                break
+            print(f"No host found in Ingress '{ingress_name}' on attempt {attempt + 1}/{retries}")
+        except client.ApiException as e:
+            print(f"Attempt {attempt + 1}/{retries} failed to retrieve Ingress '{ingress_name}': {e}")
+        time.sleep(delay)
+    
+    if domain:
+        # Use the domain from Ingress with HTTPS
+        url = f"https://{domain}/{namespace}"
+        print(f"Access URL is: {url}")
+        return url
+    
+    # Fallback to LoadBalancer IP if no domain is retrieved
+    print(f"Failed to retrieve domain after {retries} attempts. Waiting for LoadBalancer endpoint for service '{service_name}' in namespace '{ingress_namespace}'...")
     start_time = time.time()
     while True:
         try:
             service = api_instance.read_namespaced_service(name=service_name, namespace=ingress_namespace)
             if service.status.load_balancer.ingress:
                 ingress = service.status.load_balancer.ingress[0]
-                if ingress.ip:
-                    endpoint = ingress.ip
-                elif ingress.hostname:
+                if ingress.hostname:
                     endpoint = ingress.hostname
+                elif ingress.ip:
+                    endpoint = ingress.ip
                 else:
                     raise Exception(f"No valid IP or hostname found in LoadBalancer ingress for '{service_name}'")
                 url = f"http://{endpoint}/{namespace}"
@@ -193,21 +221,28 @@ def create_dspaces_resources(user_id: str):
     }
     apply_manifest(api_client, network_policy, namespace)
 
+    ingress_name = f"dspaces-api-ingress-{user_id}"
     # Dynamically create Ingress manifest
     ingress_manifest = {
         "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
         "metadata": {
-            "name": f"dspaces-api-ingress-{user_id}",
+            "name": ingress_name,
             "namespace": namespace,
             "annotations": {
                 "nginx.ingress.kubernetes.io/rewrite-target": "/$2",
-                "nginx.ingress.kubernetes.io/use-regex": "true"
+                "nginx.ingress.kubernetes.io/use-regex": "true",
+                "cert-manager.io/cluster-issuer": "letsencrypt-prod"
             }
         },
         "spec": {
             "ingressClassName": "nginx",
+            "tls": [{
+                "hosts": ["vdc-190.chpc.utah.edu"], # Domain for the certificate
+                "secretName": f"tls-{namespace}"  # Create a secret with the TLS certificate and key for the domain
+            }],
             "rules": [{
+                "host": "vdc-190.chpc.utah.edu", # Match the TLS host
                 "http": {
                     "paths": [{
                         "path": f"/{namespace}(/|$)(.*)",
@@ -226,5 +261,5 @@ def create_dspaces_resources(user_id: str):
     apply_manifest(api_client, ingress_manifest, namespace)
 
     # Get access URL
-    access_url = get_loadbalancer_url(v1_api, namespace, ingress_namespace="ingress-nginx")
+    access_url = get_loadbalancer_url(networking_v1_api, v1_api, namespace, ingress_name, ingress_namespace="ingress-nginx")
     return {"dspaces access url": access_url}
