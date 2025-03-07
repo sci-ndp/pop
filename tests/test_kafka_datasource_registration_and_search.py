@@ -60,11 +60,11 @@ def test_kafka_datasource_registration_and_search():
 
     # Step 4: Search for the newly registered dataset
     search_response = client.post(
-        "/search", json={"dataset_name": "integration_test_kafka"})
+        "/search", json={"dataset_name": "integration_test_kafka",
+                         "server": "local"},)
     assert search_response.status_code == 200, "Search request failed."
 
     search_results = search_response.json()
-    print("Search results:", search_results)
 
     found_dataset = next(
         (dataset for dataset in search_results
