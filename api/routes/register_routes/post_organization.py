@@ -1,8 +1,8 @@
 # api/routes/register_routes/post_organization.py
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 from api.models import OrganizationRequest
 from api.services import organization_services
-from typing import Dict, Any
+from typing import Dict, Any, Literal
 from api.services.keycloak_services.get_current_user import get_current_user
 
 
@@ -44,6 +44,10 @@ router = APIRouter()
 )
 async def create_organization_endpoint(
     org: OrganizationRequest,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
     _: Dict[str, Any] = Depends(get_current_user)
 ):
     """
@@ -54,6 +58,8 @@ async def create_organization_endpoint(
     org : OrganizationRequest
         An object containing the name, title, and description of
         the organization.
+    server : Literal['local', 'pre_ckan']
+        The CKAN server instance to use.
 
     Returns
     -------
@@ -72,6 +78,7 @@ async def create_organization_endpoint(
             name=org.name,
             title=org.title,
             description=org.description,
+            server=server
         )
         return {
             "id": organization_id,
