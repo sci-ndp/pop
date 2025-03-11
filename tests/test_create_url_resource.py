@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from api.main import app
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config.ckan_settings import ckan_settings
@@ -63,7 +63,8 @@ def test_create_url_resource_success():
                 "header_line": 1,
                 "start_line": 2,
                 "comment_char": "#"
-            }
+            },
+            ckan_instance=ANY
         )
 
         # Clean up dependency overrides

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+# api/routes/update_routes/put_url.py
+
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Dict, Any, Literal
 from api.services.url_services.update_url import update_url
 from api.models.update_url_model import URLUpdateRequest
-from typing import Dict, Any
-
 from api.services.keycloak_services.get_current_user import get_current_user
-
+from api.config.ckan_settings import ckan_settings
 
 router = APIRouter()
 
@@ -14,39 +15,40 @@ router = APIRouter()
     response_model=dict,
     status_code=status.HTTP_200_OK,
     summary="Update an existing URL resource",
-    description="""
-Update an existing URL resource in CKAN.
-
-### Common Fields for All File Types
-- **resource_name**: The unique name of the resource.
-- **resource_title**: The title of the resource.
-- **owner_org**: The ID of the organization to which the resource belongs.
-- **resource_url**: The URL of the resource.
-- **file_type**: The type of the file
-(`stream`, `CSV`, `TXT`, `JSON`, `NetCDF`).
-- **notes**: Additional notes about the resource (optional).
-- **extras**: Additional metadata to be added to the resource package as
-extras (optional).
-- **mapping**: Mapping information for the dataset (optional).
-- **processing**: Processing information for the dataset, which varies based
-on the `file_type`.
-
-### Example Payload
-```json
-{
-    "resource_name": "example_resource_name",
-    "resource_title": "Example Resource Title",
-    "owner_org": "example_org_id",
-    "resource_url": "http://example.com/resource",
-    "file_type": "CSV",
-    "notes": "Additional notes about the resource.",
-    "extras": {"key1": "value1", "key2": "value2"},
-    "mapping": {"field1": "mapping1", "field2": "mapping2"},
-    "processing": {
-        "delimiter": ",", "header_line": 1, "start_line": 2,
-        "comment_char": "#"}
-}
-""",
+    description=(
+        "Update an existing URL resource in CKAN.\n\n"
+        "### Common Fields for All File Types\n"
+        "- **resource_name**: The unique name of the resource.\n"
+        "- **resource_title**: The title of the resource.\n"
+        "- **owner_org**: The ID of the organization.\n"
+        "- **resource_url**: The URL of the resource.\n"
+        "- **file_type**: The file type (`stream`, `CSV`, `TXT`, `JSON`, "
+        "`NetCDF`).\n"
+        "- **notes**: Additional notes (optional).\n"
+        "- **extras**: Additional metadata (optional).\n"
+        "- **mapping**: Mapping information (optional).\n"
+        "- **processing**: Processing info (optional).\n\n"
+        "### Query Parameter\n"
+        "Use `?server=local` or `?server=pre_ckan` to pick the CKAN instance. "
+        "Defaults to 'local' if not provided.\n\n"
+        "### Example Payload\n"
+        "```\n"
+        "{\n"
+        '    "resource_name": "example_resource_name",\n'
+        '    "resource_title": "Example Resource Title",\n'
+        '    "owner_org": "example_org_id",\n'
+        '    "resource_url": "http://example.com/resource",\n'
+        '    "file_type": "CSV",\n'
+        '    "notes": "Additional notes about the resource.",\n'
+        '    "extras": {"key1": "value1", "key2": "value2"},\n'
+        '    "mapping": {"field1": "mapping1", "field2": "mapping2"},\n'
+        '    "processing": {\n'
+        '        "delimiter": ",", "header_line": 1,\n'
+        '        "start_line": 2, "comment_char": "#"\n'
+        '    }\n'
+        "}\n"
+        "```\n"
+    ),
     responses={
         200: {
             "description": "Resource updated successfully",
@@ -61,37 +63,40 @@ on the `file_type`.
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Error updating resource: <error message>"}
+                        "detail": "Error updating resource: <error>"
+                    }
                 }
             }
         }
     }
 )
-async def update_url_resource(resource_id: str,
-                              data: URLUpdateRequest,
-                              _: Dict[str, Any] = Depends(get_current_user)):
+async def update_url_resource(
+    resource_id: str,
+    data: URLUpdateRequest,
+    server: Literal["local", "pre_ckan"] = Query(
+        "local",
+        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+    ),
+    _: Dict[str, Any] = Depends(get_current_user)
+):
     """
     Update an existing URL resource in CKAN.
 
-    Parameters
-    ----------
-    resource_id : str
-        The ID of the resource to be updated.
-    data : URLUpdateRequest
-        An object containing all the parameters for updating a URL resource.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the message if successful.
-
-    Raises
-    ------
-    HTTPException
-        If there is an error updating the resource, an HTTPException is raised
-        with a detailed message.
+    If ?server=pre_ckan, uses the pre-CKAN instance if enabled. Otherwise,
+    defaults to local CKAN. Returns a 400 error if pre_ckan is disabled
+    or missing a valid scheme.
     """
     try:
+        if server == "pre_ckan":
+            if not ckan_settings.pre_ckan_enabled:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Pre-CKAN is disabled and cannot be used."
+                )
+            ckan_instance = ckan_settings.pre_ckan
+        else:
+            ckan_instance = ckan_settings.ckan
+
         await update_url(
             resource_id=resource_id,
             resource_name=data.resource_name,
@@ -102,13 +107,29 @@ async def update_url_resource(resource_id: str,
             notes=data.notes,
             extras=data.extras,
             mapping=data.mapping,
-            processing=data.processing
+            processing=data.processing,
+            ckan_instance=ckan_instance
         )
         return {"message": "Resource updated successfully"}
+
     except KeyError as e:
         raise HTTPException(
-            status_code=400, detail=f"Reserved key error: {str(e)}")
+            status_code=400,
+            detail=f"Reserved key error: {str(e)}"
+        )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid input: {str(e)}"
+        )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        if "No scheme supplied" in error_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="Pre-CKAN server is not configured or unreachable."
+            )
+        raise HTTPException(
+            status_code=400,
+            detail=error_msg
+        )

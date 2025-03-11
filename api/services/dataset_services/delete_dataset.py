@@ -1,42 +1,38 @@
+# api/services/dataset_services/delete_dataset.py
 from ckanapi import NotFound
 from api.config.ckan_settings import ckan_settings
 
 
-def delete_dataset(dataset_name: str = None, resource_id: str = None):
+def delete_dataset(
+    dataset_name: str = None,
+    resource_id: str = None,
+    ckan_instance=None
+):
     """
-    Delete a dataset from CKAN by its name.
-
-    Parameters
-    ----------
-    dataset_name : str
-        The name of the dataset to be deleted.
-    resource_id : str
-        The id of the dataset to be deleted.
-
-    Raises
-    ------
-    Exception
-        If there is an error deleting the dataset.
+    Delete a dataset from CKAN by its name or resource_id, allowing
+    a custom CKAN instance. Defaults to ckan_settings.ckan if none is
+    provided.
     """
-    ckan = ckan_settings.ckan
+    if ckan_instance is None:
+        ckan_instance = ckan_settings.ckan
+
     if not (dataset_name or resource_id):
-        raise ValueError(
-            "must dataset_name and dataset_id cannot both be None.")
+        raise ValueError("Must provide either dataset_name or resource_id.")
 
     try:
         # Retrieve the dataset to ensure it exists
         if dataset_name:
-            dataset = ckan.action.package_show(id=dataset_name)
+            dataset = ckan_instance.action.package_show(id=dataset_name)
             if resource_id and resource_id != dataset['id']:
                 raise ValueError(
-                    f"provided resource_id {resource_id} "
-                    f"but {dataset_name} matches id {dataset['id']}.")
+                    f"Provided resource_id '{resource_id}' does not match "
+                    f"the dataset id '{dataset['id']}' for '{dataset_name}'."
+                )
             resource_id = dataset['id']
-        print(f"Dataset '{dataset_name}' found with ID: {resource_id}")
 
         # Attempt to delete the dataset using its ID
-        ckan.action.dataset_purge(id=resource_id)
-        print(f"Dataset '{dataset_name}' successfully deleted.")
+        ckan_instance.action.dataset_purge(id=resource_id)
+
     except NotFound:
         raise Exception(f"Dataset '{dataset_name}' not found.")
     except Exception as e:

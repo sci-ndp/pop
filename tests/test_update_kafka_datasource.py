@@ -1,7 +1,7 @@
 # tests/test_update_kafka_datasource.py
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -27,7 +27,8 @@ def test_update_kafka_datasource_success():
     # Skip if the PUT /kafka/ route (with path param) does not exist
     if not route_exists("/kafka/", "PUT"):
         pytest.skip(
-            "PUT /kafka/{dataset_id} route not defined; skipping test.")
+            "PUT /kafka/{dataset_id} route not defined; skipping test."
+        )
 
     with patch('api.services.kafka_services.update_kafka') as mock_update:
         mock_update.return_value = True
@@ -48,6 +49,7 @@ def test_update_kafka_datasource_success():
         assert response.json() == {
             "message": "Kafka dataset updated successfully"
         }
+        # Use ANY for ckan_instance
         mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
@@ -59,7 +61,8 @@ def test_update_kafka_datasource_success():
             dataset_description=None,
             extras=None,
             mapping=None,
-            processing=None
+            processing=None,
+            ckan_instance=ANY
         )
 
         # Clean up dependency overrides
@@ -70,7 +73,8 @@ def test_update_kafka_datasource_not_found():
     # Skip if the PUT /kafka/ route (with path param) does not exist
     if not route_exists("/kafka/", "PUT"):
         pytest.skip(
-            "PUT /kafka/{dataset_id} route not defined; skipping test.")
+            "PUT /kafka/{dataset_id} route not defined; skipping test."
+        )
 
     with patch('api.services.kafka_services.update_kafka') as mock_update:
         mock_update.return_value = False
@@ -89,6 +93,7 @@ def test_update_kafka_datasource_not_found():
         response = client.put(f"/kafka/{dataset_id}", json=data)
         assert response.status_code == 404
         assert response.json() == {"detail": "Kafka dataset not found"}
+        # Use ANY for ckan_instance
         mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
@@ -100,7 +105,8 @@ def test_update_kafka_datasource_not_found():
             dataset_description=None,
             extras=None,
             mapping=None,
-            processing=None
+            processing=None,
+            ckan_instance=ANY
         )
 
         # Clean up dependency overrides
@@ -111,7 +117,8 @@ def test_update_kafka_datasource_bad_request():
     # Skip if the PUT /kafka/ route (with path param) does not exist
     if not route_exists("/kafka/", "PUT"):
         pytest.skip(
-            "PUT /kafka/{dataset_id} route not defined; skipping test.")
+            "PUT /kafka/{dataset_id} route not defined; skipping test."
+        )
 
     with patch('api.services.kafka_services.update_kafka') as mock_update:
         mock_update.side_effect = Exception("Error updating Kafka dataset")
@@ -130,6 +137,7 @@ def test_update_kafka_datasource_bad_request():
         response = client.put(f"/kafka/{dataset_id}", json=data)
         assert response.status_code == 400
         assert response.json() == {"detail": "Error updating Kafka dataset"}
+        # Use ANY for ckan_instance
         mock_update.assert_called_once_with(
             dataset_id=dataset_id,
             dataset_name="kafka_topic_example_updated",
@@ -141,7 +149,8 @@ def test_update_kafka_datasource_bad_request():
             dataset_description=None,
             extras=None,
             mapping=None,
-            processing=None
+            processing=None,
+            ckan_instance=ANY
         )
 
         # Clean up dependency overrides
@@ -152,7 +161,8 @@ def test_update_kafka_datasource_unauthorized():
     # Skip if the PUT /kafka/ route (with path param) does not exist
     if not route_exists("/kafka/", "PUT"):
         pytest.skip(
-            "PUT /kafka/{dataset_id} route not defined; skipping test.")
+            "PUT /kafka/{dataset_id} route not defined; skipping test."
+        )
 
     def mock_get_current_user():
         raise HTTPException(status_code=401, detail="Not authenticated")

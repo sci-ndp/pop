@@ -44,7 +44,8 @@ def test_create_organization_success():
         mock_create.assert_called_once_with(
             name="test_organization",
             title="Test Organization",
-            description="An organization for testing purposes."
+            description="An organization for testing purposes.",
+            server="local"
         )
 
         # Clean up dependency overrides
@@ -68,7 +69,7 @@ def test_create_organization_already_exists():
         data = {
             "name": "existing_organization",
             "title": "Existing Organization",
-            "description": "An organization that already exists."
+            "description": "An organization that already exists.",
         }
 
         response = client.post("/organization", json=data)
@@ -78,7 +79,8 @@ def test_create_organization_already_exists():
         mock_create.assert_called_once_with(
             name="existing_organization",
             title="Existing Organization",
-            description="An organization that already exists."
+            description="An organization that already exists.",
+            server="local"
         )
 
         # Clean up dependency overrides

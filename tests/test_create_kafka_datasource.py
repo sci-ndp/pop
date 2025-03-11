@@ -1,7 +1,7 @@
 # tests/test_create_kafka_datasource.py
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -68,7 +68,8 @@ def test_create_kafka_datasource_success():
             dataset_description="This is an example Kafka topic.",
             extras={"key1": "value1", "key2": "value2"},
             mapping={"field1": "mapping1", "field2": "mapping2"},
-            processing={"data_key": "data", "info_key": "info"}
+            processing={"data_key": "data", "info_key": "info"},
+            ckan_instance=ANY
         )
 
         # Clean up the override

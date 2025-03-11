@@ -1,3 +1,4 @@
+# api/services/datasource_services/search_datasource.py
 import json
 from typing import List, Optional
 from ckanapi import NotFound
@@ -58,14 +59,17 @@ async def search_datasource(
     timestamp: Optional[str] = None,
     server: Optional[str] = "local"
 ) -> List[DataSourceResponse]:
-    if server not in ["local", "global"]:
+    if server not in ["local", "global", "pre_ckan"]:
         raise Exception(
-            "Invalid server specified. Please specify 'local' or 'global'")
+            "Invalid server. Use 'local', 'global', or 'pre_ckan'."
+        )
 
     if server == "local":
-        ckan = ckan_settings.ckan_no_api_key  # Use the no API key instance
+        ckan = ckan_settings.ckan_no_api_key
     elif server == "global":
         ckan = ckan_settings.ckan_global
+    else:  # server == "pre_ckan"
+        ckan = ckan_settings.pre_ckan
 
     search_params = []
 
