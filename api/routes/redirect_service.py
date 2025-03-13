@@ -2,12 +2,13 @@
 
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import RedirectResponse
+from api.config.swagger_settings import swagger_settings
+
 
 router = APIRouter()
 
 # Dictionary mapping service names to URLs
 SERVICE_URLS = {
-    "jupyter": "http://example.com/jupyter",
     "dashboard": "http://example.com/dashboard",
     "documentation": "http://example.com/docs",
     # Add more services as needed
@@ -34,6 +35,15 @@ async def redirect_to_service(service_name: str):
     Returns:
         RedirectResponse: HTTP redirect response to the service URL.
     """
+    if service_name == "jupyter":
+        if swagger_settings.use_jupyterlab:
+            return RedirectResponse(url=swagger_settings.jupyter_url)
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="Service 'jupyter' is currently disabled."
+            )
+
     url = SERVICE_URLS.get(service_name)
     if not url:
         raise HTTPException(
