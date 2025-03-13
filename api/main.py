@@ -2,6 +2,7 @@
 
 import logging
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
@@ -35,10 +36,12 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initiate the metrics background task on startup."""
-    asyncio.create_task(record_system_metrics())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Run tasks on startup and handle shutdown."""
+    task = asyncio.create_task(record_system_metrics())
+    yield
+    task.cancel()
 
 
 # Mount static files
