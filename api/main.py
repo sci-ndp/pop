@@ -2,14 +2,23 @@
 
 import logging
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
+from api.tasks.metrics_task import record_system_metrics
+import asyncio
 
 import api.routes as routes
 from api.config import swagger_settings, ckan_settings
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s]: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 
 app = FastAPI(
     title=swagger_settings.swagger_title,
@@ -25,6 +34,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Run tasks on startup and handle shutdown."""
+    task = asyncio.create_task(record_system_metrics())
+    yield
+    task.cancel()
+
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
