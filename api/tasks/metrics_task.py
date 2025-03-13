@@ -2,7 +2,6 @@
 
 import logging
 import asyncio
-from datetime import datetime
 from api.services.status_services import get_public_ip, get_system_metrics
 
 logger = logging.getLogger(__name__)

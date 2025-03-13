@@ -8,7 +8,6 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
 from api.tasks.metrics_task import record_system_metrics
 import asyncio
-import logging
 
 import api.routes as routes
 from api.config import swagger_settings, ckan_settings
@@ -34,6 +33,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.on_event("startup")
 async def startup_event():

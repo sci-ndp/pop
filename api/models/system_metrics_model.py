@@ -3,6 +3,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class SystemMetrics(BaseModel):
     """Model for system metrics logging."""
 
