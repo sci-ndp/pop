@@ -1,3 +1,4 @@
+# api\models\request_kafka_model.py
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
 
