@@ -21,11 +21,33 @@ async def record_system_metrics():
             public_ip = get_public_ip()
             cpu, mem, disk = get_system_metrics()
 
-            logging.info(
-                f"Public IP: {public_ip} | "
-                f"CPU: {cpu}% | Memory: {mem}% | Disk: {disk}%"
-            )
+            services = {}
+
+            if swagger_settings.use_jupyterlab:
+                services["jupyter"] = swagger_settings.jupyter_url
+
+            if ckan_settings.pre_ckan_enabled:
+                services["pre_ckan"] = ckan_settings.pre_ckan_url
+
+            if ckan_settings.ckan_local_enabled:
+                services["local_ckan"] = ckan_settings.ckan_url
+
+            if kafka_settings.kafka_connection:
+                services["kafka"] = {
+                    "host": kafka_settings.kafka_host,
+                    "port": kafka_settings.kafka_port,
+                    "prefix": kafka_settings.kafka_prefix
+                }
+
+            logging.info({
+                "public_ip": public_ip,
+                "cpu": f"{cpu}%",
+                "memory": f"{mem}%",
+                "disk": f"{disk}%",
+                "services": services
+            })
+
+            await asyncio.sleep(600)
+
         except Exception as e:
             logging.error(f"Error collecting metrics: {e}")
-
-        await asyncio.sleep(600)  # every 10 minutes (adjustable)
