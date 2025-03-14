@@ -8,6 +8,9 @@ A RESTful API to manage and interact with Point of Presence (POP) resources. The
 
 - [Installation](#installation)
 - [Tutorial](#tutorial)
+- [Usage](#usage)
+- [Optional Integrations](#optional-integrations)
+- [System Metrics Logging](#system-metrics-logging)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
 - [License](#license)
@@ -55,6 +58,64 @@ In addition to these core capabilities, the POP API also supports optional confi
 
 These optional features allow the POP API to seamlessly integrate with other components in SciDx, providing extended capabilities for specialized use cases.
 
+## System Metrics Logging
+
+The POP API periodically logs essential system metrics, including:
+
+- **Public IP address**
+- **CPU usage**
+- **Memory usage**
+- **Disk usage**
+
+Additionally, it provides information about currently enabled and connected external services such as Kafka, JupyterLab, and CKAN instances.
+
+### How It Works
+
+Every 10 minutes (adjustable interval), the API logs these metrics in JSON format for easy integration with log-monitoring tools or further analysis.
+
+### Example of Logged Metrics
+
+The logs follow this structured JSON format:
+
+```json
+{
+  "public_ip": "XXX.XXX.XXX.XXX",
+  "cpu": "10%",
+  "memory": "60%",
+  "disk": "20%",
+  "services": {
+    "jupyter": "https://jupyter.org/try-jupyter/lab/",
+    "pre_ckan": "http://localhost:5000",
+    "local_ckan": "http://localhost:5000",
+    "kafka": {
+      "host": "localhost",
+      "port": 9092,
+      "prefix": "data_stream_"
+    }
+  }
+}
+```
+
+### Sending Metrics to External Endpoint (Optional)
+
+If your API is configured to run publicly (`public=True` in `swagger_settings`), it will automatically send (POST) the metrics payload shown above to an external endpoint defined by the configuration setting `metrics_endpoint`.
+
+To enable or disable sending metrics externally, adjust the following in `env_variables/.env_swagger`:
+
+```env
+PUBLIC=True
+METRICS_ENDPOINT=http://your-external-endpoint.com/metrics
+```
+
+- Set `PUBLIC=True` to enable metrics forwarding.
+- Set the `METRICS_ENDPOINT` to your desired metrics collection endpoint.
+
+Ensure your external endpoint can accept POST requests with JSON payloads in the format described above.
+
+### Troubleshooting
+
+- If metrics are not sent correctly, verify that your external endpoint is reachable from your API instance.
+- Check logs for error messages related to metrics collection or sending.
 
 ## Running Tests
 
