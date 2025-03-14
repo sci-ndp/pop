@@ -22,7 +22,7 @@ async def record_system_metrics():
     """
     while True:
         metrics_payload = {}
-        
+
         # First: collect and log metrics
         try:
             public_ip = get_public_ip()
@@ -57,10 +57,11 @@ async def record_system_metrics():
             # Log metrics as JSON
             logger.info(json.dumps(metrics_payload))
 
-        except Exception as metrics_error:
-            logger.error(f"Error collecting metrics: {metrics_payload}, error: {metrics_payload}")
-            # Decide si continuar o no según la severidad (aquí continuamos)
-        
+        except Exception as e:
+            logger.error(
+                f"Error collecting metrics: {e},"
+                f" error: {metrics_payload}")
+
         # Second try-except for POST request
         if swagger_settings.public and metrics_payload:
             try:
@@ -72,7 +73,8 @@ async def record_system_metrics():
                     )
                     response.raise_for_status()
                     logger.info(
-                        f"Successfully posted metrics to {swagger_settings.metrics_endpoint}"
+                        "Successfully posted metrics to "
+                        f"{swagger_settings.metrics_endpoint}"
                     )
 
             except Exception as e:
