@@ -20,12 +20,14 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
 )
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run tasks on startup and handle shutdown."""
     task = asyncio.create_task(record_system_metrics())
     yield
     task.cancel()
+
 
 app = FastAPI(
     title=swagger_settings.swagger_title,
