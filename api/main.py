@@ -12,7 +12,6 @@ import asyncio
 
 import api.routes as routes
 from api.config import swagger_settings, ckan_settings
-from api.routes.redirect_service import router as redirect_router
 
 
 logging.basicConfig(
@@ -58,7 +57,7 @@ if ckan_settings.ckan_local_enabled:
     app.include_router(routes.delete_router, tags=["Delete"])
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
-app.include_router(routes.redirect_service.router, tags=["Redirect"])
+app.include_router(routes.redirect_router, tags=["Redirect"])
 
 
 # Custom OpenAPI Schema for Swagger

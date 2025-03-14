@@ -1,6 +1,6 @@
 # api/routes/redirect_service.py
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 from api.config.swagger_settings import swagger_settings
 
@@ -18,11 +18,14 @@ SERVICE_URLS = {
 @router.get(
     "/redirect/{service_name}",
     summary="Redirect to external service",
-    description="Redirects user requests to external URLs based on the provided service name.",
+    description=(
+        "Redirects user requests to external URLs based"
+        " on the provided service name."),
 )
 async def redirect_to_service(service_name: str):
     """
-    Redirects the request to a predefined external URL based on the given service name.
+    Redirects the request to a predefined external URL based on the given
+    service name.
 
     Parameters:
     ----------
