@@ -2,6 +2,8 @@
 
 import logging
 import asyncio
+import json
+import httpx
 from api.services.status_services import get_public_ip, get_system_metrics
 from api.config.swagger_settings import swagger_settings
 from api.config.ckan_settings import ckan_settings
@@ -15,8 +17,13 @@ async def record_system_metrics():
     """
     Periodically logs the system metrics:
     Public IP, CPU, memory, and disk usage.
+
+    Additionally, if public=True, posts the metrics JSON to metrics_endpoint.
     """
     while True:
+        metrics_payload = {}
+        
+        # First: collect and log metrics
         try:
             public_ip = get_public_ip()
             cpu, mem, disk = get_system_metrics()
@@ -39,15 +46,37 @@ async def record_system_metrics():
                     "prefix": kafka_settings.kafka_prefix
                 }
 
-            logging.info({
+            metrics_payload = {
                 "public_ip": public_ip,
                 "cpu": f"{cpu}%",
                 "memory": f"{mem}%",
                 "disk": f"{disk}%",
                 "services": services
-            })
+            }
 
-            await asyncio.sleep(600)
+            # Log metrics as JSON
+            logger.info(json.dumps(metrics_payload))
 
-        except Exception as e:
-            logging.error(f"Error collecting metrics: {e}")
+        except Exception as metrics_error:
+            logger.error(f"Error collecting metrics: {metrics_payload}, error: {metrics_payload}")
+            # Decide si continuar o no según la severidad (aquí continuamos)
+        
+        # Second try-except for POST request
+        if swagger_settings.public and metrics_payload:
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        swagger_settings.metrics_endpoint,
+                        json=metrics_payload,
+                        timeout=10
+                    )
+                    response.raise_for_status()
+                    logger.info(
+                        f"Successfully posted metrics to {swagger_settings.metrics_endpoint}"
+                    )
+
+            except Exception as e:
+                logger.error(f"Error posting metrics: {e}")
+
+        # Sleep before next iteration
+        await asyncio.sleep(600)
