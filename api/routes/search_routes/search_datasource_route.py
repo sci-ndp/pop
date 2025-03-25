@@ -20,7 +20,7 @@ router = APIRouter()
         "- **keys**: An optional list specifying the keys "
         "to search each term.\n"
         "- **server**: Specify the server to search on: 'local', "
-        "'global', or 'pre_ckan'.\n"
+        "'global'.\n"
         "  If 'local' CKAN is disabled, it is not allowed.\n"
         "  If no server is specified, the default value is 'global'."
     ),
@@ -88,11 +88,11 @@ async def search_datasets(
             "Use `null` for a global search of the term."
         )
     ),
-    server: Literal['local', 'global', 'pre_ckan'] = Query(
+    server: Literal['local', 'global'] = Query(
         'global',  # Default value is always 'global'
         description=(
-            "Specify the server to search on: 'local', "
-            "'global', or 'pre_ckan'."
+            "Specify the server to search on: 'local' or "
+            "'global'"
             "If 'local' CKAN is disabled, it cannot be used."
         )
     )
@@ -108,8 +108,8 @@ async def search_datasets(
     keys : Optional[List[Optional[str]]]
         An optional list specifying the keys to search each term.
         Use `null` for a global search of the term.
-    server : Literal['local', 'global', 'pre_ckan']
-        Specify the server to search on: 'local', 'global', or 'pre_ckan'.
+    server : Literal['local', 'global']
+        Specify the server to search on: 'local' or 'global'.
         If 'local' CKAN is disabled, it is not allowed.
         If no server is specified, the default is 'global'.
 
@@ -123,6 +123,7 @@ async def search_datasets(
     HTTPException
         - 400: If the number of keys does not match the number of terms.
         - 400: If 'local' CKAN is disabled and selected.
+        - 400: If 'pre-ckan' CKAN is selected.
         - 422: If required query parameters are missing.
     """
 
@@ -141,6 +142,13 @@ async def search_datasets(
         raise HTTPException(
             status_code=400,
             detail="Local CKAN is disabled and cannot be used."
+        )
+
+    # Disallow 'pre_ckan' as a valid server option
+    if server == 'pre_ckan':
+        raise HTTPException(
+            status_code=400,
+            detail="'pre_ckan' server is not supported."
         )
 
     try:
