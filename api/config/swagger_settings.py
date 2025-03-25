@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     swagger_description: str = "This is the API documentation."
     swagger_version: str = Field("0.6.0", exclude=True)
     public: bool = True
-    metrics_endpoint: str = "http://localhost:8000/metrics"
+    metrics_endpoint: str = "http://fed-api:80/metrics/"
     use_jupyterlab: bool = False
     jupyter_url: str = "https://jupyter.org/try-jupyter/lab/"
 

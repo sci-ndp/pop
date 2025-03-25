@@ -13,6 +13,7 @@ services:
       - ./requirements.txt:/code/requirements.txt
       - ./tests:/code/tests
       - ./static:/code/static
+      - ./pytest.ini:/code/pytest.ini
     environment:
       - PYTHONPATH=/code
     networks:
