@@ -70,7 +70,8 @@ def test_kafka_datasource_registration_and_search():
         and "certificate verify failed" in response_json.get("detail", "")
     ):
         pytest.skip(
-            "SSL certificate verification failed when connecting to remote CKAN. "
+            "SSL certificate verification failed when connecting to "
+            "remote CKAN. "
             "This is an external issue and not related to the API itself."
         )
 
