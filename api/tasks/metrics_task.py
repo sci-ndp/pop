@@ -8,7 +8,8 @@ from api.services.status_services import get_public_ip, get_system_metrics
 from api.config.swagger_settings import swagger_settings
 from api.config.ckan_settings import ckan_settings
 from api.config.kafka_settings import kafka_settings
-
+from api.config.keycloak_settings import keycloak_settings
+from api.config.dxspaces_settings import dxspaces_settings
 
 logger = logging.getLogger(__name__)
 
