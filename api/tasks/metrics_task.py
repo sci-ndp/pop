@@ -32,13 +32,19 @@ async def record_system_metrics():
             services = {}
 
             if swagger_settings.use_jupyterlab:
-                services["jupyter"] = swagger_settings.jupyter_url
+                services["jupyter"] = {
+                    "url": swagger_settings.jupyter_url
+                }
 
             if ckan_settings.pre_ckan_enabled:
-                services["pre_ckan"] = ckan_settings.pre_ckan_url
+                services["pre_ckan"] = {
+                    "url": ckan_settings.pre_ckan_url
+                }
 
             if ckan_settings.ckan_local_enabled:
-                services["local_ckan"] = ckan_settings.ckan_url
+                services["local_ckan"] = {
+                    "url": ckan_settings.ckan_url
+                }
 
             if kafka_settings.kafka_connection:
                 services["kafka"] = {
@@ -46,7 +52,7 @@ async def record_system_metrics():
                     "port": kafka_settings.kafka_port,
                     "prefix": kafka_settings.kafka_prefix
                 }
-            
+
             if keycloak_settings.keycloak_enabled and keycloak_settings.keycloak_url:
                 services["keycloak"] = {
                     "url": keycloak_settings.keycloak_url
