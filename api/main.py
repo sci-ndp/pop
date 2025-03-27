@@ -1,6 +1,8 @@
 # api/main.py
 
 import logging
+from logging.handlers import RotatingFileHandler
+import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,11 +16,35 @@ import api.routes as routes
 from api.config import swagger_settings, ckan_settings
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s]: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
+# Define the format for all logs (timestamp, level, message)
+log_formatter = logging.Formatter(
+    '%(asctime)s [%(levelname)s]: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
+
+# Define the path for the log file
+log_file = os.path.join("logs", "metrics.log")
+
+# Create the 'logs' directory if it does not exist
+os.makedirs("logs", exist_ok=True)
+
+# Create a rotating file handler: 5MB per file, keep 3 backups
+file_handler = RotatingFileHandler(
+    log_file, maxBytes=5 * 1024 * 1024, backupCount=3
+)
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.INFO)
+
+# Create a console handler for stdout logging
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+console_handler.setLevel(logging.INFO)
+
+# Configure the root logger to use both handlers
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
 
 
 @asynccontextmanager
