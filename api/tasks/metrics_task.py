@@ -8,7 +8,8 @@ from api.services.status_services import get_public_ip, get_system_metrics
 from api.config.swagger_settings import swagger_settings
 from api.config.ckan_settings import ckan_settings
 from api.config.kafka_settings import kafka_settings
-
+from api.config.keycloak_settings import keycloak_settings
+from api.config.dxspaces_settings import dxspaces_settings
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +32,36 @@ async def record_system_metrics():
             services = {}
 
             if swagger_settings.use_jupyterlab:
-                services["jupyter"] = swagger_settings.jupyter_url
+                services["jupyter"] = {
+                    "url": swagger_settings.jupyter_url
+                }
 
             if ckan_settings.pre_ckan_enabled:
-                services["pre_ckan"] = ckan_settings.pre_ckan_url
+                services["pre_ckan"] = {
+                    "url": ckan_settings.pre_ckan_url
+                }
 
             if ckan_settings.ckan_local_enabled:
-                services["local_ckan"] = ckan_settings.ckan_url
+                services["local_ckan"] = {
+                    "url": ckan_settings.ckan_url
+                }
 
             if kafka_settings.kafka_connection:
                 services["kafka"] = {
                     "host": kafka_settings.kafka_host,
                     "port": kafka_settings.kafka_port,
                     "prefix": kafka_settings.kafka_prefix
+                }
+
+            if keycloak_settings.keycloak_enabled and keycloak_settings.keycloak_url:
+                services["keycloak"] = {
+                    "url": keycloak_settings.keycloak_url
+                }
+
+            if (dxspaces_settings.dxspaces_enabled
+                    and dxspaces_settings.dxspaces_url):
+                services["dxspaces"] = {
+                    "url": dxspaces_settings.dxspaces_url
                 }
 
             metrics_payload = {
