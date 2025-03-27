@@ -1,3 +1,4 @@
+# api\config\dxspaces_settings.py
 from pydantic_settings import BaseSettings
 
 
@@ -23,6 +24,7 @@ class RegistrationTest:
 
 
 class Settings(BaseSettings):
+    dxspaces_enabled: bool = True
     dxspaces_url: str = "http://localhost:8001"
     dxspaces_registration: str = ""
 
