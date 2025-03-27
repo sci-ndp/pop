@@ -14,6 +14,7 @@ services:
       - ./tests:/code/tests
       - ./static:/code/static
       - ./pytest.ini:/code/pytest.ini
+      - ./logs:/code/logs
     environment:
       - PYTHONPATH=/code
     networks:
