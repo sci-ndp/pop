@@ -18,7 +18,7 @@ from api.config import swagger_settings, ckan_settings
 
 # Define the format for all logs (timestamp, level, message)
 log_formatter = logging.Formatter(
-    '%(asctime)s [%(levelname)s]: %(message)s',
+    '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
