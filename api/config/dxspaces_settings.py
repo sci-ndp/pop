@@ -24,7 +24,7 @@ class RegistrationTest:
 
 
 class Settings(BaseSettings):
-    dxspaces_enabled: bool = True
+    dxspaces_enabled: bool = False
     dxspaces_url: str = "http://localhost:8001"
     dxspaces_registration: str = ""
 

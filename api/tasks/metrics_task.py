@@ -53,7 +53,8 @@ async def record_system_metrics():
                     "prefix": kafka_settings.kafka_prefix
                 }
 
-            if keycloak_settings.keycloak_enabled and keycloak_settings.keycloak_url:
+            if (keycloak_settings.keycloak_enabled
+                    and keycloak_settings.keycloak_url):
                 services["keycloak"] = {
                     "url": keycloak_settings.keycloak_url
                 }
