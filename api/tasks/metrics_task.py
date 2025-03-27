@@ -58,6 +58,12 @@ async def record_system_metrics():
                     "url": keycloak_settings.keycloak_url
                 }
 
+            if (dxspaces_settings.dxspaces_enabled
+                    and dxspaces_settings.dxspaces_url):
+                services["dxspaces"] = {
+                    "url": dxspaces_settings.dxspaces_url
+                }
+
             metrics_payload = {
                 "public_ip": public_ip,
                 "cpu": f"{cpu}%",
