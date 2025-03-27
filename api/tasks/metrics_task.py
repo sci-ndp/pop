@@ -46,6 +46,11 @@ async def record_system_metrics():
                     "port": kafka_settings.kafka_port,
                     "prefix": kafka_settings.kafka_prefix
                 }
+            
+            if keycloak_settings.keycloak_enabled and keycloak_settings.keycloak_url:
+                services["keycloak"] = {
+                    "url": keycloak_settings.keycloak_url
+                }
 
             metrics_payload = {
                 "public_ip": public_ip,
