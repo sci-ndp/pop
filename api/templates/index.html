@@ -1,5 +1,3 @@
-<!-- api/templates/index.html -->
-
 {% extends "base.html" %}
 
 {% block title %}{{ title }}{% endblock %}
@@ -9,7 +7,13 @@
     <div class="col-md-12">
         <h1>{{ title }} v{{ version }}</h1>
         <hr />
+    </div>
+</div>
 
+<!-- Nueva estructura con columnas lado a lado -->
+<div class="row">
+    <!-- Columna izquierda: textos y métricas -->
+    <div class="col-lg-6 col-md-12">
         <!-- Keycloak -->
         {% if status.keycloak_is_active %}
             <p class="text-primary text-success">
@@ -27,80 +31,108 @@
                 <strong>Remote CKAN:</strong> Reachable
             </p>
         {% else %}
-        <p class="text-primary text-danger">
-            <strong>Remote CKAN:</strong> Not reachable
-        </p>
+            <p class="text-primary text-danger">
+                <strong>Remote CKAN:</strong> Not reachable
+            </p>
         {% endif %}
 
-    </div>
-</div>
-
-<!-- Extras Section -->
-<div class="row mt-4 d-flex justify-content-center">
-    <!-- Local CKAN in a card -->
-    <div class="card card-square shadow-sm mx-2 my-2">
-      <div class="card-header card-header-custom">
-          <h5 class="card-title-custom">Local CKAN</h5>
-      </div>
-      <div class="card-body card-body-custom">
-          {% if status.ckan_local_enabled %}
-              {% if status.ckan_is_active_local is not none %}
-                  {% if status.ckan_is_active_local %}
-                      <p class="text-primary text-success">
-                          <strong>Status:</strong> Reachable
-                      </p>
-                  {% else %}
-                      <p class="text-primary text-danger">
-                          <strong>Status:</strong> Not reachable
-                      </p>
-                  {% endif %}
-              {% else %}
-                  <!-- If you do not set 'ckan_is_active_local' when disabled, 
-                       this block might remain unused. -->
-                  <p class="text-muted">
-                      <strong>Status:</strong> Not reachable
-                  </p>
-              {% endif %}
-          {% else %}
-              <p class="text-muted">
-                  <strong>Status:</strong> Disabled
-              </p>
-          {% endif %}
-      </div>
+        <!-- Métricas -->
+        <p><strong>Public IP:</strong> <span id="public-ip">Loading...</span></p>
+        <p><strong>CPU Usage:</strong> <span id="cpu-usage">Loading...</span></p>
+        <p><strong>Memory Usage:</strong> <span id="memory-usage">Loading...</span></p>
+        <p><strong>Disk Usage:</strong> <span id="disk-usage">Loading...</span></p>
+        <p class="text-muted small">Last updated: <span id="last-updated">-</span></p>
     </div>
 
-    <!-- Kafka in a card with a similar style -->
-    <div class="card card-square shadow-sm mx-2 my-2">
-    <div class="card-header card-header-custom">
-        <h5 class="card-title-custom">Kafka</h5>
-    </div>
-    <div class="card-body card-body-custom">
-        {% if kafka_info.kafka_connection %}
-        <p>
-            <strong>Host:</strong> {{ kafka_info.kafka_host }}<br/>
-            <strong>Port:</strong> {{ kafka_info.kafka_port }}
-        </p>
-        {% else %}
-        <p class="text-muted">
-            <strong>Status:</strong> Disabled
-        </p>
+    <!-- Columna derecha: tarjetas -->
+    <div class="col-lg-6 col-md-12 d-flex justify-content-start flex-wrap" style="gap: 1rem;">
+        <!-- Local CKAN -->
+        <div class="card card-square shadow-sm mx-2 my-2">
+            <div class="card-header card-header-custom">
+                <h5 class="card-title-custom">Local CKAN</h5>
+            </div>
+            <div class="card-body card-body-custom">
+                {% if status.ckan_local_enabled %}
+                    {% if status.ckan_is_active_local is not none %}
+                        {% if status.ckan_is_active_local %}
+                            <p class="text-primary text-success">
+                                <strong>Status:</strong> Reachable
+                            </p>
+                        {% else %}
+                            <p class="text-primary text-danger">
+                                <strong>Status:</strong> Not reachable
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">
+                            <strong>Status:</strong> Not reachable
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">
+                        <strong>Status:</strong> Disabled
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Kafka -->
+        <div class="card card-square shadow-sm mx-2 my-2">
+            <div class="card-header card-header-custom">
+                <h5 class="card-title-custom">Kafka</h5>
+            </div>
+            <div class="card-body card-body-custom">
+                {% if kafka_info.kafka_connection %}
+                    <p>
+                        <strong>Host:</strong> {{ kafka_info.kafka_host }}<br/>
+                        <strong>Port:</strong> {{ kafka_info.kafka_port }}
+                    </p>
+                {% else %}
+                    <p class="text-muted">
+                        <strong>Status:</strong> Disabled
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- JupyterLab -->
+        {% if use_jupyterlab %}
+        <div class="card card-square shadow-sm mx-2 my-2">
+            <div class="card-header card-header-custom">
+                <h5 class="card-title-custom">JupyterLab</h5>
+            </div>
+            <div class="card-body card-body-custom">
+                <a href="{{ jupyter_url }}" class="btn btn-primary"
+                   target="_blank" rel="noopener noreferrer">
+                    Access
+                </a>
+            </div>
+        </div>
         {% endif %}
     </div>
-    </div>
-
-    <!-- JupyterLab -->
-    {% if use_jupyterlab %}
-    <div class="card card-square shadow-sm mx-2 my-2">
-        <div class="card-header card-header-custom">
-            <h5 class="card-title-custom">JupyterLab</h5>
-        </div>
-        <div class="card-body card-body-custom">
-            <a href="{{ jupyter_url }}" class="btn btn-primary"
-               target="_blank" rel="noopener noreferrer">
-                Access
-            </a>
-        </div>
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function fetchMetrics() {
+  fetch('/status/metrics')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('public-ip').textContent = data.public_ip;
+      document.getElementById('cpu-usage').textContent = data.cpu;
+      document.getElementById('memory-usage').textContent = data.memory;
+      document.getElementById('disk-usage').textContent = data.disk;
+
+      const now = new Date();
+      document.getElementById('last-updated').textContent = now.toLocaleString();
+    })
+    .catch(error => {
+      console.error('Error fetching metrics:', error);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', fetchMetrics);
+</script>
 {% endblock %}
