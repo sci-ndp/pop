@@ -21,7 +21,7 @@ class KafkaSettings(BaseSettings):
         }
 
     model_config = {
-        "env_file": "./env_variables/.env_kafka",
+        "env_file": ".env",
         "extra": "allow",
     }
 

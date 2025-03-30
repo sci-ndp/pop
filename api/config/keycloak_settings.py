@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     test_password: str = "test"
 
     model_config = {
-        "env_file": "./env_variables/.env_keycloak",
+        "env_file": ".env",
         "extra": "allow",
     }
 

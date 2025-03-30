@@ -49,7 +49,7 @@ class Settings(BaseSettings):
         return RemoteCKAN(self.pre_ckan_url)
 
     model_config = {
-        "env_file": "./env_variables/.env_ckan",
+        "env_file": ".env",
         "extra": "allow",
     }
 
