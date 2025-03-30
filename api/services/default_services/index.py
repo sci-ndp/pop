@@ -24,6 +24,10 @@ def index(request: Request):
     use_jupyterlab = swagger_settings.use_jupyterlab
     jupyter_url = swagger_settings.jupyter_url if use_jupyterlab else None
 
+    # Add dxspaces settings to context
+    use_dxspaces = swagger_settings.use_dxspaces
+    dxspaces_url = swagger_settings.dxspaces_url if use_dxspaces else None
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -34,6 +38,9 @@ def index(request: Request):
             "status": status,
             "kafka_info": kafka_info,
             "use_jupyterlab": use_jupyterlab,
-            "jupyter_url": jupyter_url
+            "jupyter_url": jupyter_url,
+            "use_dxspaces": use_dxspaces,
+            "dxspaces_url": dxspaces_url 
+
         }
     )
