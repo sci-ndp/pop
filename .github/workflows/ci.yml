@@ -19,11 +19,6 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Aquí está el cambio principal
-      - name: Copy root env file
-        run: |
-          cp ./env.example ./.env
-
       - name: Make start-dockers.sh executable
         run: chmod +x start-dockers.sh
 
