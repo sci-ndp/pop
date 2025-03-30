@@ -13,64 +13,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-    - name: Copy env files
-      run: |
-        cp ./env_variables/example.env_ckan ./env_variables/.env_ckan
-        cp ./env_variables/example.env_keycloak ./env_variables/.env_keycloak
-        cp ./env_variables/example.env_swagger ./env_variables/.env_swagger
+      # Aquí está el cambio principal
+      - name: Copy root env file
+        run: |
+          cp ./env.example ./.env
 
-    - name: Make start-dockers.sh executable
-      run: chmod +x start-dockers.sh
+      - name: Make start-dockers.sh executable
+        run: chmod +x start-dockers.sh
 
-    - name: Run Docker containers with start-dockers.sh
-      run: ./start-dockers.sh
+      - name: Run Docker containers with start-dockers.sh
+        run: ./start-dockers.sh
 
-    - name: Stream FastAPI container logs in background
-      run: docker logs -f pop-api &
+      - name: Stream FastAPI container logs in background
+        run: docker logs -f pop-api &
 
-    - name: Wait for FastAPI container
-      run: |
-        while ! docker ps | grep pop-api; do
-          echo "Waiting for FastAPI container to be ready..."
-          sleep 5
-        done
+      - name: Wait for FastAPI container
+        run: |
+          while ! docker ps | grep pop-api; do
+            echo "Waiting for FastAPI container to be ready..."
+            sleep 5
+          done
 
-    # Verify if pydantic_settings is installed
-    - name: Verify installed packages
-      run: docker exec pop-api pip list
+      # Verify if pydantic_settings is installed
+      - name: Verify installed packages
+        run: docker exec pop-api pip list
 
-    # Reinstall pydantic_settings if necessary
-    - name: Reinstall pydantic_settings
-      run: docker exec pop-api pip install --no-cache-dir pydantic_settings
+      # Reinstall pydantic_settings if necessary
+      - name: Reinstall pydantic_settings
+        run: docker exec pop-api pip install --no-cache-dir pydantic_settings
 
-    # Reinstall pytest manually
-    - name: Reinstall pytest
-      run: docker exec pop-api pip install --no-cache-dir pytest
+      # Reinstall pytest manually
+      - name: Reinstall pytest
+        run: docker exec pop-api pip install --no-cache-dir pytest
 
-    # Show pytest details
-    - name: Show pytest details
-      run: docker exec pop-api pip show pytest
+      # Show pytest details
+      - name: Show pytest details
+        run: docker exec pop-api pip show pytest
 
-    # Run tests with pytest
-    - name: Run tests with pytest
-      run: docker exec pop-api pytest
+      # Run tests with pytest
+      - name: Run tests with pytest
+        run: docker exec pop-api pytest
 
-    # Reinstall flake8 manually
-    - name: Reinstall flake8
-      run: docker exec pop-api pip install --no-cache-dir flake8
+      # Reinstall flake8 manually
+      - name: Reinstall flake8
+        run: docker exec pop-api pip install --no-cache-dir flake8
 
-    # Run flake8 after reinstall
-    - name: Run flake8 for linting
-      run: docker exec pop-api flake8 . --count --show-source --statistics
+      # Run flake8 after reinstall
+      - name: Run flake8 for linting
+        run: docker exec pop-api flake8 . --count --show-source --statistics
 
-    - name: Stop and clean up Docker containers
-      run: ./stop-dockers.sh
+      - name: Stop and clean up Docker containers
+        run: ./stop-dockers.sh
 
   check-tests-modified:
     runs-on: ubuntu-latest
@@ -88,19 +87,14 @@ jobs:
       - name: Check if tests are modified
         id: check_files
         run: |
-          # List of existing test files
           existing_tests=$(git ls-tree -r HEAD --name-only | grep '^tests/' || true)
           
-          # Check if there are previous commits to compare with
           if git rev-parse HEAD^ >/dev/null 2>&1; then
-            # Find modified test files in this PR
             modified_tests=$(git diff --name-only HEAD^ HEAD | grep '^tests/' || true)
           else
-            # If no previous commit, assume no modified tests
             modified_tests=""
           fi
           
-          # Compare lists if both are non-empty
           if [ -n "$existing_tests" ] && [ -n "$modified_tests" ] && echo "$modified_tests" | grep -qFxf <(echo "$existing_tests"); then
             echo "tests_modified=true" >> $GITHUB_ENV
           else
@@ -112,9 +106,9 @@ jobs:
     needs: [build, check-tests-modified]
     if: needs.check-tests-modified.outputs.tests_modified == 'false'
     steps:
-    - name: Merge PR Automatically
-      uses: peter-evans/merge-pull-request@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        merge-method: squash
-        commit-message: automatic
+      - name: Merge PR Automatically
+        uses: peter-evans/merge-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
+          commit-message: automatic
