@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from api.services import status_services
+from api.services.status_services import get_full_metrics
 
 
 router = APIRouter()
@@ -33,3 +34,21 @@ async def get_status():
     return_dict = status_services.get_status()
 
     return return_dict
+
+
+@router.get(
+    "/metrics",
+    response_model=dict,
+    summary="Retrieve system metrics",
+    description="Returns detailed system metrics and service status."
+)
+async def get_metrics():
+    """
+    Endpoint to retrieve detailed system metrics.
+
+    Returns
+    -------
+    dict
+        System metrics (IP, CPU, memory, disk) and services status.
+    """
+    return get_full_metrics()
