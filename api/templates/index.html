@@ -109,6 +109,21 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- DXSpaces -->
+        {% if use_dxspaces %}
+        <div class="card card-square shadow-sm mx-2 my-2">
+            <div class="card-header card-header-custom">
+                <h5 class="card-title-custom">DXSpaces</h5>
+            </div>
+            <div class="card-body card-body-custom">
+                <a href="{{ dxspaces_url }}" class="btn btn-primary"
+                target="_blank" rel="noopener noreferrer">
+                    Access
+                </a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
