@@ -22,7 +22,7 @@ This repository requires Docker and Docker Compose to be installed on your syste
 1. **Clone the repository** (optional for latest release):
 
 2. **Create the `.env` files**:  
-   In the `.env_variables` folder, you will find template files named `example.env_*`. These serve as templates for the required `.env_*` files. Copy these files and rename them as `.env_*`, adjusting values as needed.
+   Create a `.env` file at the project root. Use the provided `example.env` file as a template, and set your configuration values appropriately.
 
 3. **Start the Docker containers**:
    A script named `./start-dockers.sh` has been created to handle all necessary steps for running the Docker containers.
@@ -40,23 +40,17 @@ For detailed usage instructions and endpoint descriptions, refer to the API swag
 
 ## Optional Integrations
 
-The POP API provides core functionalities for managing and interacting with POP resources. These core features include:
+The POP API provides core functionalities:
 
-- Managing and handling data within an internal CKAN instance.
-- Searching for data across the internal CKAN instance and external CKAN instances.
+- Data management via an internal CKAN instance.
+- Data searching across internal/external CKAN instances.
 - Authentication and authorization via Keycloak.
 
-In addition to these core capabilities, the POP API also supports optional configurations to connect with other services being developed in SciDx. These integrations are designed to enhance functionality but are not required for the basic operation of the API:
+Additional optional integrations can be enabled in the main `.env` file to enhance functionality:
 
-1. **Kafka Integration**:  
-   Enables the POP API to connect with a Kafka broker for real-time data streaming. To configure this integration, use the `.env_kafka` file located in the `env_variables` directory.
-
-2. **JupyterLab Integration**:  
-   Adds a link to a JupyterLab instance on the main page of the API, enabling users to access it directly. To enable this integration, configure the following variables in the `env_variables/.env_swagger` file:
-   - `USE_JUPYTERLAB`: Set to `True` to enable the integration (default: `False`).
-   - `JUPYTER_URL`: Specify the URL of the JupyterLab instance to be linked.
-
-These optional features allow the POP API to seamlessly integrate with other components in SciDx, providing extended capabilities for specialized use cases.
+- **Kafka Integration**: Enables Kafka integration for real-time streaming.
+- **JupyterLab Integration**: Adds JupyterLab access directly from the dashboard.
+- **DXSpaces Integration**: Enables DXSpaces (data staging service) access from the dashboard.
 
 ## System Metrics Logging
 
