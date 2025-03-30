@@ -43,7 +43,7 @@ class Settings(BaseSettings):
             return (RegistrationTest('none'))
 
     model_config = {
-        "env_file": "./env_variables/.env_dxspaces",
+        "env_file": ".env",
         "extra": "allow"
     }
 
