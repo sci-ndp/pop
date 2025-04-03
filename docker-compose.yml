@@ -9,7 +9,7 @@ services:
       - "8003:8000"
     volumes:
       - ./api:/code/api
-      - ./env_variables:/code/env_variables
+      - ./.env:/code/.env
       - ./requirements.txt:/code/requirements.txt
       - ./tests:/code/tests
       - ./static:/code/static
