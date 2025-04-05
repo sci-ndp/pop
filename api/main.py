@@ -59,7 +59,10 @@ app = FastAPI(
     title=swagger_settings.swagger_title,
     description=swagger_settings.swagger_description,
     version=swagger_settings.swagger_version,
-    lifespan=lifespan
+    lifespan=lifespan,
+    # Kubernetes specific
+    # Set the root path to "" if not set
+    root_path=os.getenv("ROOT_PATH", "") 
 )
 
 
@@ -132,6 +135,17 @@ def custom_openapi():
                 {"OAuth2Password": []},  # Username/password authentication
                 {"BearerAuth": []},  # Token authentication
             ]
+
+    # Kubernetes specific:
+    # Set a relative server URL that includes the root_path
+    root_path = app.root_path  # "/pop" in Kubernetes, "" locally
+    server_url = root_path if root_path else "/"  # Use "/" if root_path is empty
+    openapi_schema["servers"] = [
+        {
+            "url": server_url,
+            "description": "Relative server URL"
+        }
+    ]
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
