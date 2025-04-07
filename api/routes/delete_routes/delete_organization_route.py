@@ -47,9 +47,9 @@ router = APIRouter()
 )
 async def delete_organization(
     organization_name: str,
-    server: Literal["local", "pre_ckan"] = Query(
+    server: Literal["local"] = Query(
         "local",
-        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+        description="Choose 'local'. Defaults to 'local'."
     )
 ):
     """
