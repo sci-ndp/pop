@@ -38,13 +38,19 @@ async def record_system_metrics():
 
             if ckan_settings.pre_ckan_enabled:
                 services["pre_ckan"] = {
-                    "url": ckan_settings.pre_ckan_url
+                    "url": ckan_settings.pre_ckan_url,
+                    "api_key": ckan_settings.pre_ckan_api_key
                 }
 
             if ckan_settings.ckan_local_enabled:
                 services["local_ckan"] = {
-                    "url": ckan_settings.ckan_url
+                    "url": ckan_settings.ckan_url,
+                    "api_key": ckan_settings.ckan_api_key
                 }
+
+            services["global_ckan"] = {
+                "url": ckan_settings.ckan_global_url
+            }
 
             if kafka_settings.kafka_connection:
                 services["kafka"] = {
@@ -57,6 +63,15 @@ async def record_system_metrics():
                     and keycloak_settings.keycloak_url):
                 services["keycloak"] = {
                     "url": keycloak_settings.keycloak_url
+                }
+                services["keycloak"] = {
+                    "realm": keycloak_settings.realm_name
+                }
+                services["keycloak"] = {
+                    "client_id": keycloak_settings.client_id
+                }
+                services["keycloak"] = {
+                    "client_secret": keycloak_settings.client_secret
                 }
 
             if (dxspaces_settings.dxspaces_enabled
