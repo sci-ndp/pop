@@ -106,13 +106,13 @@ async def create_url_resource(
             if missing_fields:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Missing required fields for pre_ckan: {missing_fields}"
+                    detail=("Missing required fields for "
+                            f"pre_ckan: {missing_fields}")
                 )
 
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan
-
 
         resource_id = add_url(
             resource_name=data.resource_name,

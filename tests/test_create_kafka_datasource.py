@@ -199,6 +199,7 @@ def test_create_kafka_datasource_duplicate_error():
         # Clean up the override
         app.dependency_overrides.pop(get_current_user, None)
 
+
 def test_create_kafka_datasource_missing_preckan_fields():
     # Skip if the POST /kafka route does not exist
     if not route_exists("/kafka", "POST"):
@@ -221,8 +222,8 @@ def test_create_kafka_datasource_missing_preckan_fields():
     }
 
     with patch("api.config.ckan_settings.pre_ckan_enabled", True), \
-        patch("api.config.ckan_settings.pre_ckan_url", "mock_pre_ckan_url"), \
-        patch("api.config.ckan_settings.pre_ckan_api_key", "mock_api_key"):
+         patch("api.config.ckan_settings.pre_ckan_url", "mock_pre_ckan_url"), \
+         patch("api.config.ckan_settings.pre_ckan_api_key", "mock_api_key"):
 
         response = client.post("/kafka?server=pre_ckan", json=data)
 

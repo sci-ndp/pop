@@ -27,13 +27,15 @@ REQUIRED_CKAN_FIELDS = [
 
 def validate_preckan_fields(document: Dict) -> List[str]:
     """
-    Validate that a document has all required CKAN fields for insertion into preckan.
+    Validate that a document has all required CKAN fields for insertion into
+    preckan.
 
     Args:
         document (Dict): The document to validate.
 
     Returns:
-        List[str]: A list of missing required fields. Empty if none are missing.
+        List[str]: A list of missing required fields.
+            Empty if none are missing.
     """
     missing_fields = []
 
@@ -48,28 +50,3 @@ def validate_preckan_fields(document: Dict) -> List[str]:
                 missing_fields.append(field)
 
     return missing_fields
-
-
-# Example of how to use this function inside a FastAPI route
-from fastapi import FastAPI, HTTPException
-from fastapi import Request
-
-app = FastAPI()
-
-
-@app.post("/insert-preckan/")
-async def insert_preckan(request: Request):
-    """
-    Endpoint to insert a document into preckan after validating required fields.
-    """
-    document = await request.json()
-    missing_fields = validate_preckan_fields(document)
-
-    if missing_fields:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Missing required fields: {missing_fields}"
-        )
-
-    # Continue with insertion logic here
-    return {"message": "Document validated and ready for insertion"}
