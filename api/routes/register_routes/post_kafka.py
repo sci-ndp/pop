@@ -1,12 +1,13 @@
-# api/routes/register_routes/post_kafka.py
-# Code in English, PEP-8 lines <=79 chars
-
+# api\routes\register_routes\post_kafka.py
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from typing import Dict, Any, Literal
 from api.services import kafka_services
 from api.models.request_kafka_model import KafkaDataSourceRequest
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config import ckan_settings
+from api.services.validation_services.validate_preckan_fields import (
+    validate_preckan_fields,
+)
 
 router = APIRouter()
 
@@ -105,10 +106,6 @@ async def create_kafka_datasource(
     """
     Add a Kafka topic and its associated metadata to the system.
 
-    If ?server=pre_ckan, uses the pre-CKAN instance. If pre_ckan_enabled is
-    False or the URL lacks a valid scheme, returns a 400 error. Otherwise,
-    it defaults to local CKAN.
-
     Parameters
     ----------
     data : KafkaDataSourceRequest
@@ -136,6 +133,17 @@ async def create_kafka_datasource(
                     status_code=400,
                     detail="Pre-CKAN is disabled and cannot be used."
                 )
+
+            document = data.dict()
+            missing_fields = validate_preckan_fields(document)
+
+            if missing_fields:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Missing required fields for pre_ckan: "
+                           f"{missing_fields}"
+                )
+
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan

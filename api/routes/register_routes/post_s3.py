@@ -1,11 +1,12 @@
-# api/routes/register_routes/post_s3.py
-
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from typing import Dict, Any, Literal
 from api.services.s3_services.add_s3 import add_s3
 from api.models.s3request_model import S3Request
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config import ckan_settings
+from api.services.validation_services.validate_preckan_fields import (
+    validate_preckan_fields,
+)
 
 router = APIRouter()
 
@@ -82,6 +83,17 @@ async def create_s3_resource(
                     status_code=400,
                     detail="Pre-CKAN is disabled and cannot be used."
                 )
+
+            document = data.dict()
+            missing_fields = validate_preckan_fields(document)
+
+            if missing_fields:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Missing required fields for pre_ckan: "
+                           f"{missing_fields}"
+                )
+
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan

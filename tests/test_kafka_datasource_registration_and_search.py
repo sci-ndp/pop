@@ -64,14 +64,16 @@ def test_kafka_datasource_registration_and_search():
     print("Status code:", status_code)
     print("Response JSON:", response_json)
 
-    # Skip the test if SSL certificate error is detected
+    # Skip the test if SSL or connection error is detected
+    detail = response_json.get("detail", "").lower()
     if (
         status_code == 400 and isinstance(response_json, dict)
-        and "certificate verify failed" in response_json.get("detail", "")
-    ):
+        and (
+            "certificate verify failed" in detail
+            or "connection refused" in detail
+            or "max retries exceeded" in detail)):
         pytest.skip(
-            "SSL certificate verification failed when connecting to "
-            "remote CKAN. "
+            "CKAN connection error when connecting to remote CKAN. "
             "This is an external issue and not related to the API itself."
         )
 

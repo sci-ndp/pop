@@ -6,6 +6,10 @@ from api.services.url_services.add_url import add_url
 from api.models.urlrequest_model import URLRequest
 from api.services.keycloak_services.get_current_user import get_current_user
 from api.config import ckan_settings
+from api.services.validation_services.validate_preckan_fields import (
+    validate_preckan_fields,
+)
+
 
 router = APIRouter()
 
@@ -95,6 +99,17 @@ async def create_url_resource(
                     status_code=400,
                     detail="Pre-CKAN is disabled and cannot be used."
                 )
+            # Validate required fields for pre_ckan insertion
+            document = data.dict()
+            missing_fields = validate_preckan_fields(document)
+
+            if missing_fields:
+                raise HTTPException(
+                    status_code=400,
+                    detail=("Missing required fields for "
+                            f"pre_ckan: {missing_fields}")
+                )
+
             ckan_instance = ckan_settings.pre_ckan
         else:
             ckan_instance = ckan_settings.ckan
