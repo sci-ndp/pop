@@ -53,7 +53,9 @@ def get_status():
     try:
         get_client_token()
         status_dict["keycloak_is_active"] = True
+        print("Keycloak is active")
     except Exception:
         status_dict["keycloak_is_active"] = False
+        print("Keycloak is not active")
 
     return status_dict

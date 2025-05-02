@@ -198,3 +198,35 @@ def test_create_kafka_datasource_duplicate_error():
 
         # Clean up the override
         app.dependency_overrides.pop(get_current_user, None)
+
+def test_create_kafka_datasource_missing_preckan_fields():
+    # Skip if the POST /kafka route does not exist
+    if not route_exists("/kafka", "POST"):
+        pytest.skip("POST /kafka route not defined; skipping test.")
+
+    def mock_get_current_user():
+        return {"user": "test_user"}
+
+    app.dependency_overrides[get_current_user] = mock_get_current_user
+
+    data = {
+        # Missing required CKAN fields like 'notes', 'tags', etc.
+        "dataset_name": "test_kafka_missing_fields",
+        "dataset_title": "Kafka with missing fields",
+        "owner_org": "org_id",
+        "kafka_topic": "topic1",
+        "kafka_host": "localhost",
+        "kafka_port": "9092",
+        "extras": {}  # Should include things like uploadType, etc.
+    }
+
+    with patch("api.config.ckan_settings.pre_ckan_enabled", True), \
+        patch("api.config.ckan_settings.pre_ckan_url", "mock_pre_ckan_url"), \
+        patch("api.config.ckan_settings.pre_ckan_api_key", "mock_api_key"):
+
+        response = client.post("/kafka?server=pre_ckan", json=data)
+
+        assert response.status_code == 400
+        assert "Missing required fields" in response.json()["detail"]
+
+    app.dependency_overrides.pop(get_current_user, None)
