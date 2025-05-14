@@ -85,6 +85,7 @@ async def record_system_metrics():
                 "cpu": f"{cpu}%",
                 "memory": f"{mem}%",
                 "disk": f"{disk}%",
+                "version": swagger_settings.swagger_version,
                 "services": services
             }
 
