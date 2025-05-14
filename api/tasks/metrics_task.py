@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 async def record_system_metrics():
     """
     Periodically logs the system metrics:
-    Public IP, CPU, memory, and disk usage.
+    Public IP, CPU, memory, disk usage, and API version.
 
     Additionally, if public=True, posts the metrics JSON to metrics_endpoint.
     """
