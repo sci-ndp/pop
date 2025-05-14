@@ -89,6 +89,15 @@ async def record_system_metrics():
                 "services": services
             }
 
+            # Example logged payload:
+            # {
+            #     "public_ip": "1.2.3.4",
+            #     "cpu": "15%",
+            #     "memory": "65%",
+            #     "disk": "70%",
+            #     "version": "0.6.0",
+            #     "services": {...}
+            # }
             # Log metrics as JSON
             logger.info(json.dumps(metrics_payload))
 
