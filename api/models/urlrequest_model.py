@@ -116,11 +116,12 @@ class URLRequest(BaseModel):
         description="The URL of the resource to be added.",
         json_schema_extra={"example": "http://example.com/resource"},
     )
-    file_type: Optional[FileTypeEnum] = Field(
+    file_type: Optional[str] = Field(
         None,
         description=(
             "The type of the file. "
-            "Valid options are: stream, CSV, TXT, JSON, NetCDF."
+            "Options are: stream, CSV, TXT, JSON, NetCDF. "
+            "You may also specify a custom type without validation."
         ),
         json_schema_extra={"example": "CSV"},
     )
@@ -158,29 +159,28 @@ class URLRequest(BaseModel):
         file_type = values.get("file_type")
         processing = values.get("processing")
 
-        # Skip validation if processing is not provided
         if not processing:
             return values
 
-        # Map file types to their respective processing model
+        # Map of known file types to their processing validators
         processing_validators = {
-            FileTypeEnum.stream: StreamProcessingInfo,
-            FileTypeEnum.CSV: CSVProcessingInfo,
-            FileTypeEnum.TXT: TXTProcessingInfo,
-            FileTypeEnum.JSON: JSONProcessingInfo,
-            FileTypeEnum.NetCDF: NetCDFProcessingInfo,
+            "stream": StreamProcessingInfo,
+            "CSV": CSVProcessingInfo,
+            "TXT": TXTProcessingInfo,
+            "JSON": JSONProcessingInfo,
+            "NetCDF": NetCDFProcessingInfo,
         }
 
         validator = processing_validators.get(file_type)
-        if not validator:
-            raise ValueError(f"Unsupported file_type: {file_type}")
 
-        try:
-            # Validate the processing info for the file type
-            validator(**processing)
-        except ValidationError as e:
-            raise ValueError(
-                f"Invalid processing info for file_type '{file_type}': {e}"
-            ) from e
+        # If it's a known type, perform validation
+        if validator:
+            try:
+                validator(**processing)
+            except ValidationError as e:
+                raise ValueError(
+                    f"Invalid processing info for file_type '{file_type}': {e}"
+                ) from e
 
+        # If it's a custom/unknown type, skip validation
         return values

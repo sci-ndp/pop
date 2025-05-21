@@ -19,7 +19,7 @@ def add_url(
     extras=None,
     mapping=None,
     processing=None,
-    ckan_instance=None  # <-- New param
+    ckan_instance=None
 ):
     """
     Add a URL resource to CKAN.
