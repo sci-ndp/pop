@@ -62,15 +62,9 @@ async def record_system_metrics():
             if (keycloak_settings.keycloak_enabled
                     and keycloak_settings.keycloak_url):
                 services["keycloak"] = {
-                    "url": keycloak_settings.keycloak_url
-                }
-                services["keycloak"] = {
-                    "realm": keycloak_settings.realm_name
-                }
-                services["keycloak"] = {
-                    "client_id": keycloak_settings.client_id
-                }
-                services["keycloak"] = {
+                    "url": keycloak_settings.keycloak_url,
+                    "realm": keycloak_settings.realm_name,
+                    "client_id": keycloak_settings.client_id,
                     "client_secret": keycloak_settings.client_secret
                 }
 
