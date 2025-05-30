@@ -101,14 +101,14 @@ async def create_url_resource(
                 )
             # Validate required fields for pre_ckan insertion
             document = data.dict()
-            missing_fields = validate_preckan_fields(document)
+            # missing_fields = validate_preckan_fields(document)
 
-            if missing_fields:
-                raise HTTPException(
-                    status_code=400,
-                    detail=("Missing required fields for "
-                            f"pre_ckan: {missing_fields}")
-                )
+            # if missing_fields:
+            #     raise HTTPException(
+            #         status_code=400,
+            #         detail=("Missing required fields for "
+            #                 f"pre_ckan: {missing_fields}")
+            #     )
 
             ckan_instance = ckan_settings.pre_ckan
         else:
