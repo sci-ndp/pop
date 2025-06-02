@@ -60,12 +60,23 @@ The POP API periodically logs essential system metrics, including:
 - **CPU usage**
 - **Memory usage**
 - **Disk usage**
+- **Organization identification**
 
 Additionally, it provides information about currently enabled and connected external services such as Kafka, JupyterLab, and CKAN instances.
 
 ### How It Works
 
 Every 10 minutes (adjustable interval), the API logs these metrics in JSON format for easy integration with log-monitoring tools or further analysis.
+
+### Organization Configuration
+
+To identify which organization is running the POP installation, set the `ORGANIZATION` environment variable in your `.env` file:
+
+```env
+ORGANIZATION=University of Utah
+```
+
+If not configured, the system will use "Unknown Organization" as the default value.
 
 ### Example of Logged Metrics
 
@@ -77,6 +88,8 @@ The logs follow this structured JSON format:
   "cpu": "10%",
   "memory": "60%",
   "disk": "20%",
+  "version": "0.6.0",
+  "organization": "University of Utah",
   "services": {
     "jupyter": "https://jupyter.org/try-jupyter/lab/",
     "pre_ckan": "http://localhost:5000",
@@ -99,10 +112,12 @@ To enable or disable sending metrics externally, adjust the following in `env_va
 ```env
 PUBLIC=True
 METRICS_ENDPOINT=http://your-external-endpoint.com/metrics
+ORGANIZATION=University of Utah
 ```
 
 - Set `PUBLIC=True` to enable metrics forwarding.
 - Set the `METRICS_ENDPOINT` to your desired metrics collection endpoint.
+- Set `ORGANIZATION` to identify your institution in the metrics data.
 
 Ensure your external endpoint can accept POST requests with JSON payloads in the format described above.
 
@@ -110,6 +125,7 @@ Ensure your external endpoint can accept POST requests with JSON payloads in the
 
 - If metrics are not sent correctly, verify that your external endpoint is reachable from your API instance.
 - Check logs for error messages related to metrics collection or sending.
+- Verify that the `ORGANIZATION` field is properly configured if you need to identify your POP installation.
 
 ## Running Tests
 

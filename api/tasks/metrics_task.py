@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 async def record_system_metrics():
     """
     Periodically logs the system metrics:
-    Public IP, CPU, memory, disk usage, and API version.
+    Public IP, CPU, memory, disk usage, API version, and organization.
 
     Additionally, if public=True, posts the metrics JSON to metrics_endpoint.
     """
@@ -80,6 +80,7 @@ async def record_system_metrics():
                 "memory": f"{mem}%",
                 "disk": f"{disk}%",
                 "version": swagger_settings.swagger_version,
+                "organization": swagger_settings.organization,
                 "services": services
             }
 
@@ -90,6 +91,7 @@ async def record_system_metrics():
             #     "memory": "65%",
             #     "disk": "70%",
             #     "version": "0.6.0",
+            #     "organization": "University of Utah",
             #     "services": {...}
             # }
             # Log metrics as JSON
