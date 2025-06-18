@@ -24,7 +24,7 @@ class ServiceRequest(BaseModel):
     owner_org: str = Field(
         ...,
         description="Organization ID (must be 'services')",
-        regex="^services$"
+        pattern="^services$"
     )
     service_url: str = Field(
         ...,

@@ -4,7 +4,9 @@ from api.config.ckan_settings import ckan_settings
 from api.services import status_services
 from api.services.keycloak_services.introspect_user_token import \
     get_client_token
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_status():
     """
@@ -35,6 +37,7 @@ def get_status():
 
     # 1. Check local CKAN if enabled
     if ckan_settings.ckan_local_enabled:
+        logger.info("Local CKAN is enabled, checking status...")
         try:
             # Defaults to checking local CKAN if no arguments are passed
             status_dict["ckan_is_active_local"] = \
