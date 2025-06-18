@@ -43,7 +43,7 @@ async def test_metrics_payload_includes_organization():
         patch("api.services.status_services.get_public_ip") as mock_ip,
         patch("api.services.status_services.get_system_metrics") as mock_sys,
         patch.object(swagger_settings, "organization", test_organization),
-        patch.object(swagger_settings, "public", False),
+        patch.object(swagger_settings, "is_public", False),
         patch("asyncio.sleep") as mock_sleep,
         patch("api.tasks.metrics_task.logger") as mock_logger,
     ):
@@ -78,7 +78,7 @@ async def test_organization_sent_to_metrics_endpoint():
         patch("api.services.status_services.get_public_ip") as mock_ip,
         patch("api.services.status_services.get_system_metrics") as mock_sys,
         patch.object(swagger_settings, "organization", test_organization),
-        patch.object(swagger_settings, "public", True),
+        patch.object(swagger_settings, "is_public", True),
         patch("httpx.AsyncClient") as mock_client,
         patch("asyncio.sleep") as mock_sleep,
         patch("logging.getLogger"),

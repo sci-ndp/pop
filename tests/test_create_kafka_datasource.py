@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from api.main import app
 from api.services.keycloak_services.get_current_user import get_current_user
+from api.config.ckan_settings import ckan_settings
 
 client = TestClient(app)
 
@@ -219,9 +220,9 @@ def test_create_kafka_datasource_missing_preckan_fields():
     }
 
     with (
-        patch("api.config.ckan_settings.pre_ckan_enabled", True),
-        patch("api.config.ckan_settings.pre_ckan_url", "mock_pre_ckan_url"),
-        patch("api.config.ckan_settings.pre_ckan_api_key", "mock_api_key"),
+        patch.object(ckan_settings, "pre_ckan_enabled", True),
+        patch.object(ckan_settings, "pre_ckan_url", "mock_pre_ckan_url"),
+        patch.object(ckan_settings, "pre_ckan_api_key", "mock_api_key"),
     ):
 
         response = client.post("/kafka?server=pre_ckan", json=data)

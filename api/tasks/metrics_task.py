@@ -95,7 +95,7 @@ async def record_system_metrics():
             logger.error(f"Error collecting metrics: {e}," f" error: {metrics_payload}")
 
         # Second try-except for POST request
-        if swagger_settings.public and metrics_payload:
+        if swagger_settings.is_public and metrics_payload:
             try:
                 async with httpx.AsyncClient() as client:
                     response = await client.post(

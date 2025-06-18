@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
+from api.config.ckan_settings import ckan_settings
 
 client = TestClient(app)
 
@@ -61,7 +62,7 @@ def test_list_organizations_pre_ckan(server_arg):
     'list_organization' is called with (None, 'pre_ckan') and returns data.
     """
     with (
-        patch("api.config.ckan_settings.pre_ckan_enabled", True),
+        patch.object(ckan_settings, "pre_ckan_enabled", True),
         patch("api.services.organization_services.list_organization") as mock_list,
     ):
         mock_list.return_value = ["pre_org1", "pre_org2"]
