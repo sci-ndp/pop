@@ -1,5 +1,8 @@
 from ckanapi import NotFound
 from api.config.ckan_settings import ckan_settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def check_ckan_status(local=True) -> bool:
@@ -22,6 +25,10 @@ def check_ckan_status(local=True) -> bool:
     Exception
         If there is an error connecting to CKAN.
     """
+    logger.info(f"Checking CKAN status, local={local}")
+    logger.info(f"CKAN URL: {ckan_settings.ckan_url}")
+    logger.info(f"CKAN API Key: {ckan_settings.ckan_api_key}")
+
     if local:
         ckan = ckan_settings.ckan
     else:
