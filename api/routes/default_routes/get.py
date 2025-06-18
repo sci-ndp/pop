@@ -1,6 +1,7 @@
 # api/routes/default_routes/get.py
 
 from fastapi import APIRouter, Request
+
 from api.services import default_services
 
 router = APIRouter()

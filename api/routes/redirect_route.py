@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
-from api.config.swagger_settings import swagger_settings
 
+from api.config.swagger_settings import swagger_settings
 
 router = APIRouter()
 
@@ -20,7 +20,8 @@ SERVICE_URLS = {
     summary="Redirect to external service",
     description=(
         "Redirects user requests to external URLs based"
-        " on the provided service name."),
+        " on the provided service name."
+    ),
 )
 async def redirect_to_service(service_name: str):
     """
@@ -43,14 +44,12 @@ async def redirect_to_service(service_name: str):
             return RedirectResponse(url=swagger_settings.jupyter_url)
         else:
             raise HTTPException(
-                status_code=404,
-                detail="Service 'jupyter' is currently disabled."
+                status_code=404, detail="Service 'jupyter' is currently disabled."
             )
 
     url = SERVICE_URLS.get(service_name)
     if not url:
         raise HTTPException(
-            status_code=404,
-            detail=f"Service '{service_name}' not found."
+            status_code=404, detail=f"Service '{service_name}' not found."
         )
     return RedirectResponse(url=url)

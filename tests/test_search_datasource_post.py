@@ -1,6 +1,8 @@
 # tests/test_search_datasource_post.py
+from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
+
 from api.main import app
 
 client = TestClient(app)
@@ -9,8 +11,7 @@ client = TestClient(app)
 def test_search_datasource_valid_request():
     # Mock the 'search_datasource' function for a valid request
     with patch(
-        'api.services.datasource_services.search_datasource',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasource", new_callable=AsyncMock
     ) as mock_search:
         mock_search.return_value = [
             {
@@ -25,19 +26,16 @@ def test_search_datasource_valid_request():
                         "url": "http://example.com/resource",
                         "name": "Example Resource Name",
                         "description": "This is an example.",
-                        "format": "CSV"
+                        "format": "CSV",
                     }
                 ],
-                "extras": {
-                    "key1": "value1",
-                    "key2": "value2"
-                }
+                "extras": {"key1": "value1", "key2": "value2"},
             }
         ]
         data = {
             "dataset_name": "example_dataset_name",
             "resource_format": "CSV",
-            "server": "global"
+            "server": "global",
         }
         response = client.post("/search", json=data)
         assert response.status_code == 200
@@ -54,27 +52,20 @@ def test_search_datasource_valid_request():
             search_term=None,
             filter_list=None,
             timestamp=None,
-            server="global"
+            server="global",
         )
 
 
 def test_search_datasource_exception():
     # Mock the 'search_datasource' function to raise an exception
     with patch(
-        'api.services.datasource_services.search_datasource',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasource", new_callable=AsyncMock
     ) as mock_search:
-        mock_search.side_effect = Exception(
-            "Error message explaining the bad request"
-        )
-        data = {
-            "dataset_name": "example_dataset_name"
-        }
+        mock_search.side_effect = Exception("Error message explaining the bad request")
+        data = {"dataset_name": "example_dataset_name"}
         response = client.post("/search", json=data)
         assert response.status_code == 400
-        assert response.json() == {
-            "detail": "Error message explaining the bad request"
-        }
+        assert response.json() == {"detail": "Error message explaining the bad request"}
         mock_search.assert_awaited_once_with(
             dataset_name="example_dataset_name",
             dataset_title=None,
@@ -87,5 +78,5 @@ def test_search_datasource_exception():
             search_term=None,
             filter_list=None,
             timestamp=None,
-            server="global"
+            server="global",
         )

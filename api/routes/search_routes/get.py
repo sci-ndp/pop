@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
-from api.services import datasource_services
-from api.models import DataSourceResponse
 
+from fastapi import APIRouter, HTTPException, Query
+
+from api.models import DataSourceResponse
+from api.services import datasource_services
 
 router = APIRouter()
 
@@ -15,32 +16,39 @@ router = APIRouter()
         "Search datasets by various parameters including dataset name, "
         "title, organization ID, organization name, resource URL, resource "
         "name, dataset description, resource description, resource format, "
-        "and a general search term.")
+        "and a general search term."
+    ),
 )
 async def search_datasource(
-    dataset_name: Optional[str] = Query(
-        None, description="The name of the dataset."),
-    dataset_title: Optional[str] = Query(
-        None, description="The title of the dataset."),
+    dataset_name: Optional[str] = Query(None, description="The name of the dataset."),
+    dataset_title: Optional[str] = Query(None, description="The title of the dataset."),
     organization_id: Optional[str] = Query(
-        None, description="The ID of the organization that owns the dataset."),
+        None, description="The ID of the organization that owns the dataset."
+    ),
     owner_org: Optional[str] = Query(
-        None, description=(
-            "The name of the organization that owns the dataset.")),
+        None, description=("The name of the organization that owns the dataset.")
+    ),
     resource_url: Optional[str] = Query(
-        None, description="The URL of the dataset resource."),
+        None, description="The URL of the dataset resource."
+    ),
     resource_name: Optional[str] = Query(
-        None, description="The name of the dataset resource."),
+        None, description="The name of the dataset resource."
+    ),
     dataset_description: Optional[str] = Query(
-        None, description="The description of the dataset."),
+        None, description="The description of the dataset."
+    ),
     resource_description: Optional[str] = Query(
-        None, description="The description of the dataset resource."),
+        None, description="The description of the dataset resource."
+    ),
     resource_format: Optional[str] = Query(
-        None, description="The format of the dataset resource."),
+        None, description="The format of the dataset resource."
+    ),
     search_term: Optional[str] = Query(
-        None, description=(
-            "A word or fragment of a word to search "
-            "in any field of the dataset."))
+        None,
+        description=(
+            "A word or fragment of a word to search " "in any field of the dataset."
+        ),
+    ),
 ):
     """
     Endpoint to search for datasets based on various parameters.
@@ -90,7 +98,7 @@ async def search_datasource(
             dataset_description=dataset_description,
             resource_description=resource_description,
             resource_format=resource_format,
-            search_term=search_term
+            search_term=search_term,
         )
         return results
     except Exception as e:

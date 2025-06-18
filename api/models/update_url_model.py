@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Optional, Any
 from enum import Enum
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
 
 
 # Define an enumeration for file types
@@ -107,8 +108,7 @@ class URLUpdateRequest(BaseModel):
     )
     owner_org: Optional[str] = Field(
         None,
-        description=(
-            "The ID of the organization to which the resource belongs."),
+        description=("The ID of the organization to which the resource belongs."),
         json_schema_extra={"example": "example_org_id"},
     )
     resource_url: Optional[str] = Field(
@@ -118,8 +118,7 @@ class URLUpdateRequest(BaseModel):
     )
     file_type: Optional[FileTypeEnum] = Field(
         None,
-        description=(
-            "The type of the file (e.g., stream, CSV, TXT, JSON, NetCDF)."),
+        description=("The type of the file (e.g., stream, CSV, TXT, JSON, NetCDF)."),
         json_schema_extra={"example": "CSV"},
     )
     notes: Optional[str] = Field(
@@ -130,19 +129,17 @@ class URLUpdateRequest(BaseModel):
     extras: Optional[Dict[str, str]] = Field(
         None,
         description=(
-            "Additional metadata to be added to the resource "
-            "package as extras."),
+            "Additional metadata to be added to the resource " "package as extras."
+        ),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )
     mapping: Optional[Dict[str, str]] = Field(
         None,
         description="Mapping information for the dataset.",
-        json_schema_extra={
-            "example": {"field1": "mapping1", "field2": "mapping2"}},
+        json_schema_extra={"example": {"field1": "mapping1", "field2": "mapping2"}},
     )
     processing: Optional[Dict[str, Any]] = Field(
         None,
         description="Processing information for the dataset.",
-        json_schema_extra={
-            "example": {"data_key": "data", "info_key": "info"}},
+        json_schema_extra={"example": {"data_key": "data", "info_key": "info"}},
     )

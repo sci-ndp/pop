@@ -1,4 +1,5 @@
 from ckanapi import NotFound, ValidationError
+
 from api.config.ckan_settings import ckan_settings
 
 
@@ -26,23 +27,23 @@ def delete_organization_and_datasets(organization_id: str) -> str:
     try:
         # Get all datasets for the organization
         datasets = ckan.action.package_search(
-            fq=f'owner_org:{organization_id}', rows=1000)
+            fq=f"owner_org:{organization_id}", rows=1000
+        )
 
         # Delete all datasets associated with the organization
-        for dataset in datasets['results']:
-            ckan.action.package_delete(id=dataset['id'])
+        for dataset in datasets["results"]:
+            ckan.action.package_delete(id=dataset["id"])
 
         # Delete the organization
         ckan.action.organization_delete(id=organization_id)
 
-        return (f"Organization {organization_id} "
-                "and all its datasets have been deleted.")
+        return (
+            f"Organization {organization_id} " "and all its datasets have been deleted."
+        )
 
     except ValidationError as e:
         raise Exception(f"Validation error: {e.error_dict}")
     except NotFound:
-        raise Exception(
-            "CKAN API endpoint not found or organization does not exist")
+        raise Exception("CKAN API endpoint not found or organization does not exist")
     except Exception as e:
-        raise Exception(
-            f"Error deleting organization and its datasets: {str(e)}")
+        raise Exception(f"Error deleting organization and its datasets: {str(e)}")

@@ -1,10 +1,10 @@
 # api/services/organization_services/list_organization.py
 from typing import List, Optional
+
 from api.config.ckan_settings import ckan_settings
 
 
-def list_organization(name: Optional[str] = None,
-                      server: str = "global") -> List[str]:
+def list_organization(name: Optional[str] = None, server: str = "global") -> List[str]:
     """
     Retrieve a list of all organizations from the specified CKAN server,
     optionally filtered by name.
@@ -44,9 +44,7 @@ def list_organization(name: Optional[str] = None,
         # Filter the organizations if a name is provided
         if name:
             name_lower = name.lower()
-            organizations = [
-                org for org in organizations if name_lower in org.lower()
-            ]
+            organizations = [org for org in organizations if name_lower in org.lower()]
 
         return organizations
 

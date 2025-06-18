@@ -1,6 +1,7 @@
 # api/routes/status_routes/kafka_details.py
 
 from fastapi import APIRouter, HTTPException
+
 from api.config.kafka_settings import kafka_settings
 
 router = APIRouter()
@@ -9,8 +10,10 @@ router = APIRouter()
 @router.get(
     "/kafka-details",
     summary="Get Kafka connection details",
-    description=("Returns Kafka host, port, connection status, prefix, "
-                 "and max number of streams."),
+    description=(
+        "Returns Kafka host, port, connection status, prefix, "
+        "and max number of streams."
+    ),
 )
 async def get_kafka_details():
     """
@@ -42,5 +45,5 @@ async def get_kafka_details():
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error retrieving Kafka details: {str(e)}")
+            status_code=500, detail=f"Error retrieving Kafka details: {str(e)}"
+        )

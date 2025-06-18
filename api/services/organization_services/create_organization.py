@@ -1,13 +1,17 @@
 # api/services/organization_services/create_organization.py
-from typing import Optional, Literal
+from typing import Literal, Optional
+
 from ckanapi import NotFound, ValidationError
+
 from api.config.ckan_settings import ckan_settings
 
 
-def create_organization(name: str,
-                        title: str,
-                        description: Optional[str] = None,
-                        server: Literal["local", "pre_ckan"] = "local") -> str:
+def create_organization(
+    name: str,
+    title: str,
+    description: Optional[str] = None,
+    server: Literal["local", "pre_ckan"] = "local",
+) -> str:
     """
     Create a new organization in CKAN.
 
@@ -36,26 +40,20 @@ def create_organization(name: str,
     # Select CKAN instance based on 'server' parameter
     if server == "pre_ckan":
         if not ckan_settings.pre_ckan_enabled:
-            raise Exception(
-                "Pre-CKAN is disabled and cannot be used."
-            )
+            raise Exception("Pre-CKAN is disabled and cannot be used.")
         ckan = ckan_settings.pre_ckan
     else:
         if not ckan_settings.ckan_local_enabled:
-            raise Exception(
-                "Local CKAN is disabled and cannot be used."
-            )
+            raise Exception("Local CKAN is disabled and cannot be used.")
         ckan = ckan_settings.ckan
 
     try:
         # Create the organization in CKAN
         organization = ckan.action.organization_create(
-            name=name,
-            title=title,
-            description=description
+            name=name, title=title, description=description
         )
         # Return the organization ID
-        return organization['id']
+        return organization["id"]
     except ValidationError as e:
         raise Exception(f"Validation error: {e.error_dict}")
     except NotFound:

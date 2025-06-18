@@ -1,6 +1,7 @@
 # api\models\request_kafka_model.py
-from pydantic import BaseModel, Field
 from typing import Dict, Optional
+
+from pydantic import BaseModel, Field
 
 
 class KafkaDataSourceRequest(BaseModel):
@@ -39,14 +40,13 @@ class KafkaDataSourceRequest(BaseModel):
         description="A description of the dataset.",
         json_schema_extra={
             "example": (
-                "This is an example Kafka topic registered "
-                "as a system dataset."),
+                "This is an example Kafka topic registered " "as a system dataset."
+            ),
         },
     )
     extras: Optional[Dict[str, str]] = Field(
         None,
-        description=(
-            "Additional metadata to be added to the dataset as extras."),
+        description=("Additional metadata to be added to the dataset as extras."),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )
     mapping: Optional[Dict[str, str]] = Field(
@@ -56,12 +56,10 @@ class KafkaDataSourceRequest(BaseModel):
             "For selecting the desired fields to send and how they will "
             "be named."
         ),
-        json_schema_extra={
-            "example": {"field1": "mapping1", "field2": "mapping2"}},
+        json_schema_extra={"example": {"field1": "mapping1", "field2": "mapping2"}},
     )
     processing: Optional[Dict[str, str]] = Field(
         None,
         description="Processing information for the dataset.",
-        json_schema_extra={
-            "example": {"data_key": "data", "info_key": "info"}},
+        json_schema_extra={"example": {"data_key": "data", "info_key": "info"}},
     )

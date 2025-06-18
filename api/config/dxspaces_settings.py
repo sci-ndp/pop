@@ -1,9 +1,9 @@
 # api\config\dxspaces_settings.py
 from pydantic_settings import BaseSettings
 
-
 try:
     from dxspaces import DXSpacesClient
+
     have_staging = True
 except Exception:
     have_staging = False
@@ -14,11 +14,11 @@ class RegistrationTest:
         self.reg_list = reg_list
 
     def __getitem__(self, key):
-        if self.reg_list == 'all':
+        if self.reg_list == "all":
             return True
-        elif self.reg_list == 'none':
+        elif self.reg_list == "none":
             return False
-        elif key in self.reg_list.replace(' ', '').split(','):
+        elif key in self.reg_list.replace(" ", "").split(","):
             return True
         return False
 
@@ -38,14 +38,11 @@ class Settings(BaseSettings):
     @property
     def registration_methods(self):
         if have_staging:
-            return (RegistrationTest(self.dxspaces_registration))
+            return RegistrationTest(self.dxspaces_registration)
         else:
-            return (RegistrationTest('none'))
+            return RegistrationTest("none")
 
-    model_config = {
-        "env_file": ".env",
-        "extra": "allow"
-    }
+    model_config = {"env_file": ".env", "extra": "allow"}
 
 
 dxspaces_settings = Settings()

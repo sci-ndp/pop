@@ -6,9 +6,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """
     Configuration settings for the API application.
-    
+
     All settings can be overridden using environment variables.
     """
+
     swagger_title: str = "API Documentation"
     swagger_description: str = "This is the API documentation."
     swagger_version: str = "0.6.0"

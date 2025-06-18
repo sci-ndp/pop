@@ -1,11 +1,12 @@
 # api/services/keycloak_services/get_current_user.py
-from fastapi import Depends, HTTPException, status
 from typing import Optional
 
-from . import oauth2_scheme
+from fastapi import Depends, HTTPException, status
+
 from ...config.keycloak_settings import keycloak_settings
-from .get_user_info_from_token import get_user_info_from_token
+from . import oauth2_scheme
 from .get_user_info_from_test import get_user_info_from_test
+from .get_user_info_from_token import get_user_info_from_token
 
 
 def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
@@ -37,8 +38,8 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
             raise credentials_exception
 
     # Check if the user information contains an error
-    if 'error' in user:
-        if user['error'] == 'Could not validate credentials':
+    if "error" in user:
+        if user["error"] == "Could not validate credentials":
             # Raise the credentials exception if the error is due to invalid
             # credentials
             raise credentials_exception

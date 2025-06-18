@@ -1,25 +1,24 @@
 # api/main.py
 
+import asyncio
 import logging
-from logging.handlers import RotatingFileHandler
 import os
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from logging.handlers import RotatingFileHandler
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer
-from api.tasks.metrics_task import record_system_metrics
-import asyncio
+from fastapi.staticfiles import StaticFiles
 
 import api.routes as routes
-from api.config import swagger_settings, ckan_settings
-
+from api.config import ckan_settings, swagger_settings
+from api.tasks.metrics_task import record_system_metrics
 
 # Define the format for all logs (timestamp, level, message)
 log_formatter = logging.Formatter(
-    '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )
 
 # Define the path for the log file
@@ -29,9 +28,7 @@ log_file = os.path.join("logs", "metrics.log")
 os.makedirs("logs", exist_ok=True)
 
 # Create a rotating file handler: 5MB per file, keep 3 backups
-file_handler = RotatingFileHandler(
-    log_file, maxBytes=5 * 1024 * 1024, backupCount=3
-)
+file_handler = RotatingFileHandler(log_file, maxBytes=5 * 1024 * 1024, backupCount=3)
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)
 
@@ -59,7 +56,7 @@ app = FastAPI(
     title=swagger_settings.swagger_title,
     description=swagger_settings.swagger_description,
     version=swagger_settings.swagger_version,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 
@@ -122,7 +119,7 @@ def custom_openapi():
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-        }
+        },
     }
 
     # Apply both security schemes globally to all endpoints

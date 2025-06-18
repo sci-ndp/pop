@@ -1,9 +1,9 @@
 # api/routes/status_routes/get.py
 
 from fastapi import APIRouter
+
 from api.services import status_services
 from api.services.status_services import get_full_metrics
-
 
 router = APIRouter()
 
@@ -12,9 +12,7 @@ router = APIRouter()
     "/",
     response_model=dict,
     summary="Check system status",
-    description=(
-        "Check if the CKAN and Keycloak servers are active "
-        "andreachable.")
+    description=("Check if the CKAN and Keycloak servers are active " "andreachable."),
 )
 async def get_status():
     """
@@ -40,7 +38,7 @@ async def get_status():
     "/metrics",
     response_model=dict,
     summary="Retrieve system metrics",
-    description="Returns detailed system metrics and service status."
+    description="Returns detailed system metrics and service status.",
 )
 async def get_metrics():
     """

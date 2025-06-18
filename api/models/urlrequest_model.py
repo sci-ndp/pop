@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, ValidationError, model_validator
 from enum import Enum
 from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 
 # Define an enumeration for file types
@@ -107,8 +108,7 @@ class URLRequest(BaseModel):
     )
     owner_org: str = Field(
         ...,
-        description=(
-            "The ID of the organization to which the resource belongs."),
+        description=("The ID of the organization to which the resource belongs."),
         json_schema_extra={"example": "example_org_id"},
     )
     resource_url: str = Field(
@@ -128,30 +128,24 @@ class URLRequest(BaseModel):
     notes: Optional[str] = Field(
         None,
         description="Additional notes about the resource.",
-        json_schema_extra={
-            "example": "Some additional notes about the resource."},
+        json_schema_extra={"example": "Some additional notes about the resource."},
     )
     extras: Optional[Dict[str, str]] = Field(
         None,
         description=(
-            "Additional metadata to be added to the resource package "
-            "as extras."
+            "Additional metadata to be added to the resource package " "as extras."
         ),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )
     mapping: Optional[Dict[str, str]] = Field(
         None,
         description="Mapping information for the dataset.",
-        json_schema_extra={
-            "example": {"field1": "mapping1", "field2": "mapping2"}
-        },
+        json_schema_extra={"example": {"field1": "mapping1", "field2": "mapping2"}},
     )
     processing: Optional[Dict[str, Any]] = Field(
         None,
         description="Processing information for the dataset.",
-        json_schema_extra={
-            "example": {"data_key": "data", "info_key": "info"}
-        },
+        json_schema_extra={"example": {"data_key": "data", "info_key": "info"}},
     )
 
     @model_validator(mode="before")

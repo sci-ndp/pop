@@ -1,11 +1,20 @@
 # api\services\url_services\add_url.py
 import json
+
 from api.config import ckan_settings, dxspaces_settings
 
-
 RESERVED_KEYS = {
-    'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection',
-    'url', 'mapping', 'processing', 'file_type'
+    "name",
+    "title",
+    "owner_org",
+    "notes",
+    "id",
+    "resources",
+    "collection",
+    "url",
+    "mapping",
+    "processing",
+    "file_type",
 }
 
 
@@ -19,7 +28,7 @@ def add_url(
     extras=None,
     mapping=None,
     processing=None,
-    ckan_instance=None
+    ckan_instance=None,
 ):
     """
     Add a URL resource to CKAN.
@@ -66,8 +75,7 @@ def add_url(
 
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Decide which CKAN instance to use
@@ -76,39 +84,34 @@ def add_url(
 
     url_extras = {"file_type": file_type}
 
-    if dxspaces_settings.registration_methods['url'] and file_type == "NetCDF":
+    if dxspaces_settings.registration_methods["url"] and file_type == "NetCDF":
         dxspaces = dxspaces_settings.dxspaces
-        staging_params = {'url': resource_url}
-        staging_handle = dxspaces.Register(
-            'url', resource_name, staging_params)
+        staging_params = {"url": resource_url}
+        staging_handle = dxspaces.Register("url", resource_name, staging_params)
         if extras is None:
             extras = {}
-        extras['staging_socket'] = dxspaces_settings.dxspaces_url
-        extras['staging_handle'] = staging_handle.model_dump_json()
+        extras["staging_socket"] = dxspaces_settings.dxspaces_url
+        extras["staging_handle"] = staging_handle.model_dump_json()
 
     if mapping:
-        url_extras['mapping'] = json.dumps(mapping)
+        url_extras["mapping"] = json.dumps(mapping)
     if processing:
-        url_extras['processing'] = json.dumps(processing)
+        url_extras["processing"] = json.dumps(processing)
 
     extras_cleaned = extras.copy() if extras else {}
     extras_cleaned.update(url_extras)
 
     try:
         resource_package_dict = {
-            'name': resource_name,
-            'title': resource_title,
-            'owner_org': owner_org,
-            'notes': notes,
-            'extras': [
-                {'key': k, 'value': v} for k, v in extras_cleaned.items()
-            ]
+            "name": resource_name,
+            "title": resource_title,
+            "owner_org": owner_org,
+            "notes": notes,
+            "extras": [{"key": k, "value": v} for k, v in extras_cleaned.items()],
         }
 
-        resource_package = ckan_instance.action.package_create(
-            **resource_package_dict
-        )
-        resource_package_id = resource_package['id']
+        resource_package = ckan_instance.action.package_create(**resource_package_dict)
+        resource_package_id = resource_package["id"]
 
     except Exception as e:
         raise Exception(f"Error creating resource package: {str(e)}")
@@ -120,7 +123,7 @@ def add_url(
                 url=resource_url,
                 name=resource_name,
                 description=f"Resource pointing to {resource_url}",
-                format="url"
+                format="url",
             )
         except Exception as e:
             raise Exception(f"Error creating resource: {str(e)}")

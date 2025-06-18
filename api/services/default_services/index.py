@@ -40,7 +40,6 @@ def index(request: Request):
             "use_jupyterlab": use_jupyterlab,
             "jupyter_url": jupyter_url,
             "use_dxspaces": use_dxspaces,
-            "dxspaces_url": dxspaces_url
-
-        }
+            "dxspaces_url": dxspaces_url,
+        },
     )

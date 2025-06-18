@@ -1,10 +1,12 @@
 # /api/routes/search_routes/search_datasource_route.py
 
+from typing import List, Literal, Optional
+
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional, Literal
-from api.services import datasource_services
-from api.models import DataSourceResponse
+
 from api.config.ckan_settings import ckan_settings  # Import CKAN settings
+from api.models import DataSourceResponse
+from api.services import datasource_services
 
 router = APIRouter()
 
@@ -42,60 +44,50 @@ router = APIRouter()
                                     "url": "http://example.com/resource",
                                     "name": "Example Resource Name",
                                     "description": "This is an example.",
-                                    "format": "CSV"
+                                    "format": "CSV",
                                 }
                             ],
-                            "extras": {
-                                "key1": "value1",
-                                "key2": "value2"
-                            }
+                            "extras": {"key1": "value1", "key2": "value2"},
                         }
                     ]
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Error message explaining the bad request"
-                    }
+                    "example": {"detail": "Error message explaining the bad request"}
                 }
-            }
+            },
         },
         422: {
             "description": "Unprocessable Entity",
             "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Validation error details"
-                    }
-                }
-            }
-        }
-    }
+                "application/json": {"example": {"detail": "Validation error details"}}
+            },
+        },
+    },
 )
 async def search_datasets(
     terms: List[str] = Query(
-        ...,
-        description="A list of terms to search for in the datasets."
+        ..., description="A list of terms to search for in the datasets."
     ),
     keys: Optional[List[Optional[str]]] = Query(
         None,
         description=(
             "An optional list of keys corresponding to each term. "
             "Use `null` for a global search of the term."
-        )
+        ),
     ),
-    server: Literal['local', 'global'] = Query(
-        'global',  # Default value is always 'global'
+    server: Literal["local", "global"] = Query(
+        "global",  # Default value is always 'global'
         description=(
             "Specify the server to search on: 'local' or "
             "'global'"
             "If 'local' CKAN is disabled, it cannot be used."
-        )
-    )
+        ),
+    ),
 ):
     """
     Endpoint to search datasets by a list of terms with optional key
@@ -134,29 +126,25 @@ async def search_datasets(
             detail=(
                 "The number of keys must match the number of terms, or keys "
                 "must be omitted."
-            )
+            ),
         )
 
     # Validate that 'local' server is only allowed when CKAN local is enabled
-    if server == 'local' and not ckan_settings.ckan_local_enabled:
+    if server == "local" and not ckan_settings.ckan_local_enabled:
         raise HTTPException(
-            status_code=400,
-            detail="Local CKAN is disabled and cannot be used."
+            status_code=400, detail="Local CKAN is disabled and cannot be used."
         )
 
     # Disallow 'pre_ckan' as a valid server option
-    if server == 'pre_ckan':
+    if server == "pre_ckan":
         raise HTTPException(
-            status_code=400,
-            detail="'pre_ckan' server is not supported."
+            status_code=400, detail="'pre_ckan' server is not supported."
         )
 
     try:
         # Call the service function to perform the dataset search
         results = await datasource_services.search_datasets_by_terms(
-            terms_list=terms,
-            keys_list=keys,
-            server=server
+            terms_list=terms, keys_list=keys, server=server
         )
         return results
     except HTTPException as he:

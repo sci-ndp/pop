@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional, Literal
-from api.services import datasource_services
-from api.models import DataSourceResponse
+from typing import List, Literal, Optional
 
+from fastapi import APIRouter, HTTPException, Query
+
+from api.models import DataSourceResponse
+from api.services import datasource_services
 
 router = APIRouter()
 
@@ -55,55 +56,53 @@ router = APIRouter()
                                     "url": "http://example.com/resource",
                                     "name": "Example Resource Name",
                                     "description": "This is an example.",
-                                    "format": "CSV"
+                                    "format": "CSV",
                                 }
                             ],
-                            "extras": {
-                                "key1": "value1",
-                                "key2": "value2"
-                            }
+                            "extras": {"key1": "value1", "key2": "value2"},
                         }
                     ]
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Error message explaining the bad request"
-                    }
+                    "example": {"detail": "Error message explaining the bad request"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def search_datasource(
-    dataset_name: Optional[str] = Query(
-        None, description="The name of the dataset."),
-    dataset_title: Optional[str] = Query(
-        None, description="The title of the dataset."),
-    owner_org: Optional[str] = Query(
-        None, description="The name of the organization."),
+    dataset_name: Optional[str] = Query(None, description="The name of the dataset."),
+    dataset_title: Optional[str] = Query(None, description="The title of the dataset."),
+    owner_org: Optional[str] = Query(None, description="The name of the organization."),
     resource_url: Optional[str] = Query(
-        None, description="The URL of the dataset resource."),
+        None, description="The URL of the dataset resource."
+    ),
     resource_name: Optional[str] = Query(
-        None, description="The name of the dataset resource."),
+        None, description="The name of the dataset resource."
+    ),
     dataset_description: Optional[str] = Query(
-        None, description="The description of the dataset."),
+        None, description="The description of the dataset."
+    ),
     resource_description: Optional[str] = Query(
-        None, description="The description of the dataset resource."),
+        None, description="The description of the dataset resource."
+    ),
     resource_format: Optional[str] = Query(
-        None, description="The format of the dataset resource."),
+        None, description="The format of the dataset resource."
+    ),
     search_term: Optional[str] = Query(
-        None, description="A term to search across all fields."),
+        None, description="A term to search across all fields."
+    ),
     timestamp: Optional[str] = Query(
-        None, description="A time range term to filter results."),
-    server: Optional[Literal['local', 'global']] = Query(
-        'local',
-        description="Specify the server to search on: 'local' or 'global'."
-    )
+        None, description="A time range term to filter results."
+    ),
+    server: Optional[Literal["local", "global"]] = Query(
+        "local", description="Specify the server to search on: 'local' or 'global'."
+    ),
 ):
     """
     Endpoint to search by various parameters.
@@ -154,11 +153,10 @@ async def search_datasource(
             resource_name=resource_name,
             dataset_description=dataset_description,
             resource_description=resource_description,
-            resource_format=resource_format.lower()
-            if resource_format else None,
+            resource_format=resource_format.lower() if resource_format else None,
             search_term=search_term,
             timestamp=timestamp,
-            server=server
+            server=server,
         )
         return results
     except Exception as e:

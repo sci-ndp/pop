@@ -1,12 +1,12 @@
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class ProducerPayload(BaseModel):
     keywords: Optional[str] = Field(
         None,
-        description=(
-            "Comma-separated keywords to target specific data streams."),
+        description=("Comma-separated keywords to target specific data streams."),
         json_schema_extra={"example": "temperature,bme280"},
     )
     match_all: bool = Field(

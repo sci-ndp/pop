@@ -1,15 +1,16 @@
 import pytest
 from fastapi.testclient import TestClient
-from api.main import app
+
 from api.config.ckan_settings import ckan_settings
 from api.config.keycloak_settings import keycloak_settings
+from api.main import app
 
 client = TestClient(app)
 
 
 @pytest.mark.skipif(
     not ckan_settings.ckan_local_enabled,
-    reason="Local CKAN is disabled; skipping Kafka integration tests."
+    reason="Local CKAN is disabled; skipping Kafka integration tests.",
 )
 def test_kafka_datasource_registration_and_search():
     """
@@ -37,7 +38,7 @@ def test_kafka_datasource_registration_and_search():
     org_data = {
         "name": "test_org",
         "title": "Test Organization",
-        "description": "Organization for integration testing"
+        "description": "Organization for integration testing",
     }
     client.post("/organization", json=org_data, headers=headers)
 
@@ -52,7 +53,7 @@ def test_kafka_datasource_registration_and_search():
         "dataset_description": "Integration test for Kafka endpoint.",
         "extras": {"integration": "true"},
         "mapping": {"field": "value"},
-        "processing": {"key": "value"}
+        "processing": {"key": "value"},
     }
 
     # Step 3: Register Kafka datasource
@@ -67,35 +68,40 @@ def test_kafka_datasource_registration_and_search():
     # Skip the test if SSL or connection error is detected
     detail = response_json.get("detail", "").lower()
     if (
-        status_code == 400 and isinstance(response_json, dict)
+        status_code == 400
+        and isinstance(response_json, dict)
         and (
             "certificate verify failed" in detail
             or "connection refused" in detail
-            or "max retries exceeded" in detail)):
+            or "max retries exceeded" in detail
+        )
+    ):
         pytest.skip(
             "CKAN connection error when connecting to remote CKAN. "
             "This is an external issue and not related to the API itself."
         )
 
-    assert response.status_code in (201, 409), \
-        "Failed to register Kafka dataset."
+    assert response.status_code in (201, 409), "Failed to register Kafka dataset."
 
     # Step 4: Search for the newly registered dataset
     search_response = client.post(
-        "/search", json={"dataset_name": "integration_test_kafka",
-                         "server": "local"},)
+        "/search",
+        json={"dataset_name": "integration_test_kafka", "server": "local"},
+    )
     assert search_response.status_code == 200, "Search request failed."
 
     search_results = search_response.json()
 
     found_dataset = next(
-        (dataset for dataset in search_results
-         if dataset.get("name") == "integration_test_kafka"),
-        None
+        (
+            dataset
+            for dataset in search_results
+            if dataset.get("name") == "integration_test_kafka"
+        ),
+        None,
     )
 
-    assert found_dataset is not None, \
-        "Kafka datasource not found in search results."
+    assert found_dataset is not None, "Kafka datasource not found in search results."
 
     # Cleanup after test
     client.delete("/kafka/integration_test_kafka", headers=headers)

@@ -1,5 +1,6 @@
 import os
 from unittest.mock import patch
+
 from api.config.swagger_settings import Settings
 
 
@@ -18,7 +19,7 @@ def test_public_variable_true():
     Test that 'public' is True when the 'PUBLIC' environment
     variable is set to 'True'.
     """
-    with patch.dict(os.environ, {'PUBLIC': 'True'}):
+    with patch.dict(os.environ, {"PUBLIC": "True"}):
         settings = Settings()
         assert settings.public is True
 
@@ -28,6 +29,6 @@ def test_public_variable_false():
     Test that 'public' is False when the 'PUBLIC' environment
     variable is set to 'False'.
     """
-    with patch.dict(os.environ, {'PUBLIC': 'False'}):
+    with patch.dict(os.environ, {"PUBLIC": "False"}):
         settings = Settings()
         assert settings.public is False

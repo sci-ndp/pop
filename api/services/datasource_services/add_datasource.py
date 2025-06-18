@@ -1,20 +1,20 @@
 from api.config.ckan_settings import ckan_settings
 
-
 # Define a set of reserved keys that should not be used in the extras
-RESERVED_KEYS = {
-    'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection'}
+RESERVED_KEYS = {"name", "title", "owner_org", "notes", "id", "resources", "collection"}
 
 
-def add_datasource(dataset_name,
-                   dataset_title,
-                   owner_org,
-                   resource_url,
-                   resource_name,
-                   dataset_description="",
-                   resource_description="",
-                   resource_format=None,
-                   extras=None):
+def add_datasource(
+    dataset_name,
+    dataset_title,
+    owner_org,
+    resource_url,
+    resource_name,
+    dataset_description="",
+    resource_description="",
+    resource_format=None,
+    extras=None,
+):
     """
     Add a dataset and its associated resource to CKAN.
 
@@ -61,28 +61,27 @@ def add_datasource(dataset_name,
 
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}")
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
+        )
 
     ckan = ckan_settings.ckan
 
     try:
         # Create the dataset in CKAN with additional extras if provided
         dataset_dict = {
-            'name': dataset_name,
-            'title': dataset_title,
-            'owner_org': owner_org,
-            'notes': dataset_description
+            "name": dataset_name,
+            "title": dataset_title,
+            "owner_org": owner_org,
+            "notes": dataset_description,
         }
 
         if extras:
-            dataset_dict['extras'] = [
-                {'key': k, 'value': v} for k, v in extras.items()]
+            dataset_dict["extras"] = [{"key": k, "value": v} for k, v in extras.items()]
 
         dataset = ckan.action.package_create(**dataset_dict)
 
         # Retrieve the dataset ID
-        dataset_id = dataset['id']
+        dataset_id = dataset["id"]
     except Exception as e:
         # If an error occurs, raise an exception with a detailed error message
         raise Exception(f"Error creating dataset: {str(e)}")
@@ -95,7 +94,7 @@ def add_datasource(dataset_name,
                 url=resource_url,
                 name=resource_name,
                 description=resource_description,
-                format=resource_format
+                format=resource_format,
             )
         except Exception as e:
             # If an error occurs, raise an exception with a detailed error

@@ -18,5 +18,5 @@ def get_system_metrics():
     """Get system metrics: CPU, memory, and disk usage percentages."""
     cpu_percent = psutil.cpu_percent(interval=1)
     memory_percent = psutil.virtual_memory().percent
-    disk_usage_percent = psutil.disk_usage('/').percent
+    disk_usage_percent = psutil.disk_usage("/").percent
     return cpu_percent, memory_percent, disk_usage_percent

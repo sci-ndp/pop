@@ -17,7 +17,7 @@ class KafkaSettings(BaseSettings):
             "kafka_host": self.kafka_host,
             "kafka_port": self.kafka_port,
             "kafka_prefix": self.kafka_prefix,
-            "max_streams": self.max_streams
+            "max_streams": self.max_streams,
         }
 
     model_config = {

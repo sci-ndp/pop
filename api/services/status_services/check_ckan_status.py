@@ -1,6 +1,8 @@
-from ckanapi import NotFound
-from api.config.ckan_settings import ckan_settings
 import logging
+
+from ckanapi import NotFound
+
+from api.config.ckan_settings import ckan_settings
 
 logger = logging.getLogger(__name__)
 

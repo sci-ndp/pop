@@ -1,15 +1,17 @@
+from unittest.mock import ANY, patch
+
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import HTTPException
-from unittest.mock import patch, ANY
+from fastapi.testclient import TestClient
+
+from api.config.ckan_settings import ckan_settings
 from api.main import app
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config.ckan_settings import ckan_settings
 
 # Skip every test in this file if local CKAN is disabled
 pytestmark = pytest.mark.skipif(
     not ckan_settings.ckan_local_enabled,
-    reason="Local CKAN is disabled; skipping organization deletion tests."
+    reason="Local CKAN is disabled; skipping organization deletion tests.",
 )
 
 
@@ -18,7 +20,7 @@ client = TestClient(app)
 
 def test_create_url_resource_success():
     # Mock 'add_url' to simulate successful resource creation
-    with patch('api.routes.register_routes.post_url.add_url') as mock_add_url:
+    with patch("api.routes.register_routes.post_url.add_url") as mock_add_url:
         mock_add_url.return_value = "12345678-abcd-efgh-ijkl-1234567890ab"
 
         # Override 'get_current_user' dependency
@@ -40,15 +42,13 @@ def test_create_url_resource_success():
                 "delimiter": ",",
                 "header_line": 1,
                 "start_line": 2,
-                "comment_char": "#"
-            }
+                "comment_char": "#",
+            },
         }
 
         response = client.post("/url", json=data)
         assert response.status_code == 201
-        assert response.json() == {
-            "id": "12345678-abcd-efgh-ijkl-1234567890ab"
-        }
+        assert response.json() == {"id": "12345678-abcd-efgh-ijkl-1234567890ab"}
         mock_add_url.assert_called_once_with(
             resource_name="test_resource",
             resource_title="Test Resource",
@@ -62,9 +62,9 @@ def test_create_url_resource_success():
                 "delimiter": ",",
                 "header_line": 1,
                 "start_line": 2,
-                "comment_char": "#"
+                "comment_char": "#",
             },
-            ckan_instance=ANY
+            ckan_instance=ANY,
         )
 
         # Clean up dependency overrides
@@ -73,7 +73,7 @@ def test_create_url_resource_success():
 
 def test_create_url_resource_key_error():
     # Mock 'add_url' to raise a KeyError
-    with patch('api.routes.register_routes.post_url.add_url') as mock_add_url:
+    with patch("api.routes.register_routes.post_url.add_url") as mock_add_url:
         mock_add_url.side_effect = KeyError("reserved_key")
 
         # Override 'get_current_user' dependency
@@ -88,14 +88,12 @@ def test_create_url_resource_key_error():
             "owner_org": "organization_id",
             "resource_url": "http://example.com/data.csv",
             "file_type": "CSV",
-            "extras": {"reserved_key": "value"}
+            "extras": {"reserved_key": "value"},
         }
 
         response = client.post("/url", json=data)
         assert response.status_code == 400
-        assert response.json() == {
-            "detail": "Reserved key error: 'reserved_key'"
-        }
+        assert response.json() == {"detail": "Reserved key error: 'reserved_key'"}
 
         # Clean up dependency overrides
         app.dependency_overrides.pop(get_current_user, None)
@@ -103,7 +101,7 @@ def test_create_url_resource_key_error():
 
 def test_create_url_resource_value_error():
     # Mock 'add_url' to raise a ValueError
-    with patch('api.routes.register_routes.post_url.add_url') as mock_add_url:
+    with patch("api.routes.register_routes.post_url.add_url") as mock_add_url:
         mock_add_url.side_effect = ValueError("Invalid file_type")
 
         # Override 'get_current_user' dependency
@@ -118,14 +116,12 @@ def test_create_url_resource_value_error():
             "owner_org": "organization_id",
             "resource_url": "http://example.com/data.csv",
             "file_type": "CSV",  # Use a valid file_type
-            "extras": {"key1": "value1"}
+            "extras": {"key1": "value1"},
         }
 
         response = client.post("/url", json=data)
         assert response.status_code == 400  # Bad Request
-        assert response.json() == {
-            "detail": "Invalid input: Invalid file_type"
-        }
+        assert response.json() == {"detail": "Invalid input: Invalid file_type"}
 
         # Clean up dependency overrides
         app.dependency_overrides.pop(get_current_user, None)
@@ -133,7 +129,7 @@ def test_create_url_resource_value_error():
 
 def test_create_url_resource_general_exception():
     # Mock 'add_url' to raise a general Exception
-    with patch('api.routes.register_routes.post_url.add_url') as mock_add_url:
+    with patch("api.routes.register_routes.post_url.add_url") as mock_add_url:
         mock_add_url.side_effect = Exception("Unexpected error")
 
         # Override 'get_current_user' dependency
@@ -148,7 +144,7 @@ def test_create_url_resource_general_exception():
             "owner_org": "organization_id",
             "resource_url": "http://example.com/data.csv",
             "file_type": "CSV",
-            "extras": {"key1": "value1"}
+            "extras": {"key1": "value1"},
         }
 
         response = client.post("/url", json=data)
@@ -172,7 +168,7 @@ def test_create_url_resource_validation_error():
         "owner_org": "organization_id",
         "resource_url": "http://example.com/data.csv",
         "file_type": "CSV",
-        "extras": {"key1": "value1"}
+        "extras": {"key1": "value1"},
     }
 
     response = client.post("/url", json=data)
@@ -196,7 +192,7 @@ def test_create_url_resource_unauthorized():
         "owner_org": "organization_id",
         "resource_url": "http://example.com/data.csv",
         "file_type": "CSV",
-        "extras": {"key1": "value1"}
+        "extras": {"key1": "value1"},
     }
 
     response = client.post("/url", json=data)

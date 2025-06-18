@@ -1,5 +1,6 @@
+from typing import Dict, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
 
 
 class S3Request(BaseModel):
@@ -15,8 +16,7 @@ class S3Request(BaseModel):
     )
     owner_org: str = Field(
         ...,
-        description=(
-            "The ID of the organization to which the resource belongs."),
+        description=("The ID of the organization to which the resource belongs."),
         json_schema_extra={"example": "example_org_id"},
     )
     resource_s3: str = Field(
@@ -32,7 +32,7 @@ class S3Request(BaseModel):
     extras: Optional[Dict[str, str]] = Field(
         None,
         description=(
-            "Additional metadata to be added to the resource "
-            "package as extras."),
+            "Additional metadata to be added to the resource " "package as extras."
+        ),
         json_schema_extra={"example": {"key1": "value1", "key2": "value2"}},
     )

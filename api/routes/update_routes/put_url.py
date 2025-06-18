@@ -1,11 +1,13 @@
 # api/routes/update_routes/put_url.py
 
-from fastapi import APIRouter, HTTPException, status, Depends, Query
-from typing import Dict, Any, Literal
-from api.services.url_services.update_url import update_url
+from typing import Any, Dict, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from api.config.ckan_settings import ckan_settings
 from api.models.update_url_model import URLUpdateRequest
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config.ckan_settings import ckan_settings
+from api.services.url_services.update_url import update_url
 
 router = APIRouter()
 
@@ -45,7 +47,7 @@ router = APIRouter()
         '    "processing": {\n'
         '        "delimiter": ",", "header_line": 1,\n'
         '        "start_line": 2, "comment_char": "#"\n'
-        '    }\n'
+        "    }\n"
         "}\n"
         "```\n"
     ),
@@ -56,28 +58,25 @@ router = APIRouter()
                 "application/json": {
                     "example": {"message": "Resource updated successfully"}
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Error updating resource: <error>"
-                    }
+                    "example": {"detail": "Error updating resource: <error>"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def update_url_resource(
     resource_id: str,
     data: URLUpdateRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local",
-        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
-    _: Dict[str, Any] = Depends(get_current_user)
+    _: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Update an existing URL resource in CKAN.
@@ -90,8 +89,7 @@ async def update_url_resource(
         if server == "pre_ckan":
             if not ckan_settings.pre_ckan_enabled:
                 raise HTTPException(
-                    status_code=400,
-                    detail="Pre-CKAN is disabled and cannot be used."
+                    status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
             ckan_instance = ckan_settings.pre_ckan
         else:
@@ -108,28 +106,19 @@ async def update_url_resource(
             extras=data.extras,
             mapping=data.mapping,
             processing=data.processing,
-            ckan_instance=ckan_instance
+            ckan_instance=ckan_instance,
         )
         return {"message": "Resource updated successfully"}
 
     except KeyError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Reserved key error: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Reserved key error: {str(e)}")
     except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid input: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
     except Exception as e:
         error_msg = str(e)
         if "No scheme supplied" in error_msg:
             raise HTTPException(
                 status_code=400,
-                detail="Pre-CKAN server is not configured or unreachable."
+                detail="Pre-CKAN server is not configured or unreachable.",
             )
-        raise HTTPException(
-            status_code=400,
-            detail=error_msg
-        )
+        raise HTTPException(status_code=400, detail=error_msg)

@@ -1,8 +1,8 @@
 # api\routes\status_routes\get_jupyter.py
 
 from fastapi import APIRouter, HTTPException
-from api.config.swagger_settings import swagger_settings
 
+from api.config.swagger_settings import swagger_settings
 
 router = APIRouter()
 
@@ -31,5 +31,5 @@ async def get_jupyter_details():
         return {"jupyter_url": swagger_settings.jupyter_url}
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error retrieving Kafka details: {str(e)}")
+            status_code=500, detail=f"Error retrieving Kafka details: {str(e)}"
+        )

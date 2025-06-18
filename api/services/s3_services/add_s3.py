@@ -1,9 +1,7 @@
 # api/services/s3_services/add_s3.py
 from api.config import ckan_settings
 
-RESERVED_KEYS = {
-    'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection'
-}
+RESERVED_KEYS = {"name", "title", "owner_org", "notes", "id", "resources", "collection"}
 
 
 def add_s3(
@@ -13,7 +11,7 @@ def add_s3(
     resource_s3,
     notes="",
     extras=None,
-    ckan_instance=None  # Nuevo parámetro opcional
+    ckan_instance=None,  # Nuevo parámetro opcional
 ):
     """
     Add an S3 resource to CKAN.
@@ -57,8 +55,7 @@ def add_s3(
 
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Decide CKAN instance
@@ -67,21 +64,19 @@ def add_s3(
 
     try:
         resource_package_dict = {
-            'name': resource_name,
-            'title': resource_title,
-            'owner_org': owner_org,
-            'notes': notes
+            "name": resource_name,
+            "title": resource_title,
+            "owner_org": owner_org,
+            "notes": notes,
         }
 
         if extras:
-            resource_package_dict['extras'] = [
-                {'key': k, 'value': v} for k, v in extras.items()
+            resource_package_dict["extras"] = [
+                {"key": k, "value": v} for k, v in extras.items()
             ]
 
-        resource_package = ckan_instance.action.package_create(
-            **resource_package_dict
-        )
-        resource_package_id = resource_package['id']
+        resource_package = ckan_instance.action.package_create(**resource_package_dict)
+        resource_package_id = resource_package["id"]
 
     except Exception as e:
         raise Exception(f"Error creating resource package: {str(e)}")
@@ -93,7 +88,7 @@ def add_s3(
                 url=resource_s3,
                 name=resource_name,
                 description=f"Resource pointing to {resource_s3}",
-                format="s3"
+                format="s3",
             )
         except Exception as e:
             raise Exception(f"Error creating resource: {str(e)}")

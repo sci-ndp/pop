@@ -1,10 +1,11 @@
 # tests\test_search_datasource.py
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
-from api.main import app
 
+from api.main import app
 
 client = TestClient(app)
 
@@ -19,16 +20,14 @@ async def test_search_datasets_no_terms():
       that the 'terms' parameter is required.
     """
     response = client.get("/search")
-    assert response.status_code == 422, (
-        "Expected a 422 status code for missing 'terms'"
-    )
+    assert response.status_code == 422, "Expected a 422 status code for missing 'terms'"
     assert response.json() == {
         "detail": [
             {
                 "loc": ["query", "terms"],
                 "msg": "Field required",
                 "type": "missing",
-                "input": None
+                "input": None,
             }
         ]
     }, "Response body does not match the expected error detail."
@@ -58,40 +57,27 @@ async def test_search_datasets_with_terms():
                     "url": "http://example.com/resource",
                     "name": "Example Resource Name",
                     "description": "This is an example.",
-                    "format": "CSV"
+                    "format": "CSV",
                 }
             ],
-            "extras": {
-                "key1": "value1",
-                "key2": "value2"
-            }
+            "extras": {"key1": "value1", "key2": "value2"},
         }
     ]
 
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
         mock_search.return_value = mock_result
 
-        params = [
-            ("terms", "example"),
-            ("terms", "dataset"),
-            ("server", "global")
-        ]
+        params = [("terms", "example"), ("terms", "dataset"), ("server", "global")]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 200, (
-            "Expected 200 status for valid 'terms'"
-        )
-        assert response.json() == mock_result, (
-            "Response does not match mock data"
-        )
+        assert response.status_code == 200, "Expected 200 status for valid 'terms'"
+        assert response.json() == mock_result, "Response does not match mock data"
 
         mock_search.assert_awaited_once_with(
-            terms_list=["example", "dataset"],
-            keys_list=None,
-            server="global"
+            terms_list=["example", "dataset"], keys_list=None, server="global"
         )
 
 
@@ -106,27 +92,21 @@ async def test_search_datasets_exception():
       return a 400 Bad Request with the exception message.
     """
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
-        mock_search.side_effect = Exception(
-            "Error message explaining the bad request"
-        )
+        mock_search.side_effect = Exception("Error message explaining the bad request")
 
         params = [("terms", "example")]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 400, (
-            "Expected 400 status on exception"
-        )
+        assert response.status_code == 400, "Expected 400 status on exception"
         assert response.json() == {
             "detail": "Error message explaining the bad request"
         }, "Error detail does not match the expected message."
 
         mock_search.assert_awaited_once_with(
-            terms_list=["example"],
-            keys_list=None,
-            server="global"
+            terms_list=["example"], keys_list=None, server="global"
         )
 
 
@@ -142,15 +122,12 @@ async def test_search_datasets_invalid_server():
     params = [("terms", "example"), ("server", "invalid_server")]
 
     response = client.get("/search", params=params)
-    assert response.status_code == 422, (
-        "Expected 422 for invalid server value."
-    )
+    assert response.status_code == 422, "Expected 422 for invalid server value."
 
     actual_error_detail = response.json()["detail"][0]
 
     assert actual_error_detail["loc"] == ["query", "server"]
-    assert actual_error_detail["msg"] == (
-        "Input should be 'local' or 'global'")
+    assert actual_error_detail["msg"] == ("Input should be 'local' or 'global'")
 
 
 @pytest.mark.asyncio
@@ -164,23 +141,19 @@ async def test_search_datasets_empty_terms():
       in terms.
     """
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
         mock_search.return_value = []
 
         params = [("terms", "")]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 200, (
-            "Expected 200 status for empty terms."
-        )
+        assert response.status_code == 200, "Expected 200 status for empty terms."
         assert response.json() == [], "Expected an empty list of datasets."
 
         mock_search.assert_awaited_once_with(
-            terms_list=[""],
-            keys_list=None,
-            server="global"
+            terms_list=[""], keys_list=None, server="global"
         )
 
 
@@ -202,13 +175,13 @@ async def test_search_datasets_with_keys():
             "owner_org": "another_example_org",
             "notes": "This is another example dataset.",
             "resources": [],
-            "extras": {}
+            "extras": {},
         }
     ]
 
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
         mock_search.return_value = mock_result
 
@@ -216,21 +189,17 @@ async def test_search_datasets_with_keys():
             ("terms", "another"),
             ("terms", "dataset"),
             ("keys", "description"),
-            ("keys", "extras.key1")
+            ("keys", "extras.key1"),
         ]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 200, (
-            "Expected 200 for valid keys."
-        )
-        assert response.json() == mock_result, (
-            "Response does not match mock data."
-        )
+        assert response.status_code == 200, "Expected 200 for valid keys."
+        assert response.json() == mock_result, "Response does not match mock data."
 
         mock_search.assert_awaited_once_with(
             terms_list=["another", "dataset"],
             keys_list=["description", "extras.key1"],
-            server="global"
+            server="global",
         )
 
 
@@ -253,13 +222,13 @@ async def test_search_datasets_mixed_keys():
             "owner_org": "mixed_org",
             "notes": "Dataset matching global and specific terms.",
             "resources": [],
-            "extras": {}
+            "extras": {},
         }
     ]
 
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
         mock_search.return_value = mock_result
 
@@ -267,21 +236,17 @@ async def test_search_datasets_mixed_keys():
             ("terms", "global_term"),
             ("terms", "specific_term"),
             ("keys", "null"),
-            ("keys", "description")
+            ("keys", "description"),
         ]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 200, (
-            "Expected 200 for mixed keys."
-        )
-        assert response.json() == mock_result, (
-            "Response does not match mock data."
-        )
+        assert response.status_code == 200, "Expected 200 for mixed keys."
+        assert response.json() == mock_result, "Response does not match mock data."
 
         mock_search.assert_awaited_once_with(
             terms_list=["global_term", "specific_term"],
             keys_list=["null", "description"],
-            server="global"
+            server="global",
         )
 
 
@@ -293,15 +258,9 @@ async def test_search_datasets_keys_length_mismatch():
     """
     response = client.get(
         "/search",
-        params=[
-            ("terms", "water"),
-            ("terms", "temperature"),
-            ("keys", "description")
-        ]
+        params=[("terms", "water"), ("terms", "temperature"), ("keys", "description")],
     )
-    assert response.status_code == 400, (
-        "Expected 400 for mismatched keys/terms."
-    )
+    assert response.status_code == 400, "Expected 400 for mismatched keys/terms."
     assert response.json() == {
         "detail": (
             "The number of keys must match the number of terms, "
@@ -324,26 +283,19 @@ async def test_search_datasets_special_chars_in_keys():
     mock_result = []
 
     with patch(
-        'api.services.datasource_services.search_datasets_by_terms',
-        new_callable=AsyncMock
+        "api.services.datasource_services.search_datasets_by_terms",
+        new_callable=AsyncMock,
     ) as mock_search:
         mock_search.return_value = mock_result
 
-        params = [
-            ("terms", "example"),
-            ("keys", "metadata[field]")
-        ]
+        params = [("terms", "example"), ("keys", "metadata[field]")]
 
         response = client.get("/search", params=params)
-        assert response.status_code == 200, (
-            "Expected 200 for special chars in keys."
-        )
+        assert response.status_code == 200, "Expected 200 for special chars in keys."
         assert response.json() == mock_result, "Expected no results."
 
         mock_search.assert_awaited_once_with(
-            terms_list=["example"],
-            keys_list=["metadata[field]"],
-            server="global"
+            terms_list=["example"], keys_list=["metadata[field]"], server="global"
         )
 
 
@@ -360,12 +312,12 @@ async def test_search_datasets_global_ckan_unreachable():
         "api.services.datasource_services.search_datasets_by_terms",
         side_effect=HTTPException(
             status_code=400, detail="Global catalog is not reachable."
-        )
+        ),
     ):
         response = client.get(
-            "/search", params=[("terms", "example"), ("server", "global")])
-        assert response.status_code == 400, (
-            "Expected 400 status for unreachable global CKAN."
+            "/search", params=[("terms", "example"), ("server", "global")]
         )
-        assert response.json() == {
-            "detail": "Global catalog is not reachable."}
+        assert (
+            response.status_code == 400
+        ), "Expected 400 status for unreachable global CKAN."
+        assert response.json() == {"detail": "Global catalog is not reachable."}

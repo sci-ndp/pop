@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class OrganizationRequest(BaseModel):
@@ -7,8 +8,7 @@ class OrganizationRequest(BaseModel):
         ...,
         json_schema_extra={
             "example": "example_org_name",
-            "description": (
-                "The unique name of the organization to be created."),
+            "description": ("The unique name of the organization to be created."),
         },
     )
     title: str = Field(

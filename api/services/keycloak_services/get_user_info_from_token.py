@@ -20,11 +20,11 @@ def get_user_info_from_token(token):
         # If the response is successful
         # Extract the relevant information from the response
         user_info = {}
-        user_info['id'] = user_keycloak.get('sub')
-        user_info['username'] = user_keycloak.get('preferred_username')
-        user_info['email'] = user_keycloak.get('profile email')
-        user_info['first_name'] = user_keycloak.get('given_name')
-        user_info['last_name'] = user_keycloak.get('family_name')
+        user_info["id"] = user_keycloak.get("sub")
+        user_info["username"] = user_keycloak.get("preferred_username")
+        user_info["email"] = user_keycloak.get("profile email")
+        user_info["first_name"] = user_keycloak.get("given_name")
+        user_info["last_name"] = user_keycloak.get("family_name")
         return user_info
     except Exception:
-        return {'error': 'Could not validate credentials'}
+        return {"error": "Could not validate credentials"}

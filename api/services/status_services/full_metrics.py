@@ -1,6 +1,6 @@
 # api\services\status_services\full_metrics.py
-from .system_metrics import get_public_ip, get_system_metrics
 from .check_api_status import get_status
+from .system_metrics import get_public_ip, get_system_metrics
 
 
 def get_full_metrics():

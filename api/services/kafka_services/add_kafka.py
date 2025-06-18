@@ -1,12 +1,22 @@
 # api/services/kafka_services/add_kafka.py
 import json
 from typing import Optional
+
 from api.config.ckan_settings import ckan_settings
 
-
 RESERVED_KEYS = {
-    'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection',
-    'host', 'port', 'topic', 'mapping', 'processing'
+    "name",
+    "title",
+    "owner_org",
+    "notes",
+    "id",
+    "resources",
+    "collection",
+    "host",
+    "port",
+    "topic",
+    "mapping",
+    "processing",
 }
 
 
@@ -21,7 +31,7 @@ def add_kafka(
     extras: Optional[dict] = None,
     mapping: Optional[dict] = None,
     processing: Optional[dict] = None,
-    ckan_instance=None
+    ckan_instance=None,
 ) -> str:
     """
     Add a Kafka topic and its metadata to CKAN.
@@ -71,9 +81,7 @@ def add_kafka(
     if isinstance(kafka_port, str) and kafka_port.isdigit():
         kafka_port = int(kafka_port)
     elif not isinstance(kafka_port, int):
-        raise ValueError(
-            f"kafka_port must be an integer, got {type(kafka_port)}"
-        )
+        raise ValueError(f"kafka_port must be an integer, got {type(kafka_port)}")
 
     # Validate extras is a dict or None
     if extras and not isinstance(extras, dict):
@@ -82,21 +90,16 @@ def add_kafka(
     # Check reserved keys
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Prepare Kafka-related extras
-    kafka_extras = {
-        'host': kafka_host,
-        'port': kafka_port,
-        'topic': kafka_topic
-    }
+    kafka_extras = {"host": kafka_host, "port": kafka_port, "topic": kafka_topic}
 
     if mapping:
-        kafka_extras['mapping'] = json.dumps(mapping)
+        kafka_extras["mapping"] = json.dumps(mapping)
     if processing:
-        kafka_extras['processing'] = json.dumps(processing)
+        kafka_extras["processing"] = json.dumps(processing)
 
     # Merge general extras with Kafka extras
     extras_cleaned = extras.copy() if extras else {}
@@ -109,16 +112,14 @@ def add_kafka(
     # Create the CKAN dataset
     try:
         dataset_dict = {
-            'name': dataset_name,
-            'title': dataset_title,
-            'owner_org': owner_org,
-            'notes': dataset_description,
-            'extras': [
-                {'key': k, 'value': v} for k, v in extras_cleaned.items()
-            ]
+            "name": dataset_name,
+            "title": dataset_title,
+            "owner_org": owner_org,
+            "notes": dataset_description,
+            "extras": [{"key": k, "value": v} for k, v in extras_cleaned.items()],
         }
         dataset = ckan_instance.action.package_create(**dataset_dict)
-        dataset_id = dataset['id']
+        dataset_id = dataset["id"]
 
     except Exception as exc:
         raise Exception(f"Error creating Kafka dataset: {str(exc)}")
@@ -129,10 +130,9 @@ def add_kafka(
             package_id=dataset_id,
             name=kafka_topic,
             description=(
-                f"Kafka topic {kafka_topic} "
-                f"hosted at {kafka_host}:{kafka_port}"
+                f"Kafka topic {kafka_topic} " f"hosted at {kafka_host}:{kafka_port}"
             ),
-            format="kafka"
+            format="kafka",
         )
     except Exception as exc:
         raise Exception(f"Error creating Kafka resource: {str(exc)}")

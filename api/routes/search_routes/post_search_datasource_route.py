@@ -1,10 +1,12 @@
 # api/routes/search_routes/post_search_datasource_route.py
 
-from fastapi import APIRouter, HTTPException
 from typing import List
-from api.services import datasource_services
-from api.models import DataSourceResponse, SearchRequest
+
+from fastapi import APIRouter, HTTPException
+
 from api.config.ckan_settings import ckan_settings
+from api.models import DataSourceResponse, SearchRequest
+from api.services import datasource_services
 
 router = APIRouter()
 
@@ -41,10 +43,8 @@ router = APIRouter()
         200: {
             "description": "Datasets retrieved successfully",
         },
-        400: {
-            "description": "Bad Request"
-        }
-    }
+        400: {"description": "Bad Request"},
+    },
 )
 async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
     """
@@ -56,10 +56,9 @@ async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
         - 400: if 'pre_ckan' is disabled or unreachable.
     """
     # If server is 'pre_ckan' but not enabled, raise a 400 error
-    if data.server == 'pre_ckan' and not ckan_settings.pre_ckan_enabled:
+    if data.server == "pre_ckan" and not ckan_settings.pre_ckan_enabled:
         raise HTTPException(
-            status_code=400,
-            detail="Pre-CKAN is disabled and cannot be used."
+            status_code=400, detail="Pre-CKAN is disabled and cannot be used."
         )
 
     # Convert 'resource_format' to lowercase if it's provided
@@ -67,9 +66,7 @@ async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
         data.resource_format = data.resource_format.lower()
 
     try:
-        results = await datasource_services.search_datasource(
-            **data.model_dump()
-        )
+        results = await datasource_services.search_datasource(**data.model_dump())
         return results
 
     except Exception as exc:
@@ -77,7 +74,6 @@ async def search_datasource(data: SearchRequest) -> List[DataSourceResponse]:
         # Provide a friendly error if CKAN complains about the scheme
         if "No scheme supplied" in error_text:
             raise HTTPException(
-                status_code=400,
-                detail="Server is not configured or unreachable."
+                status_code=400, detail="Server is not configured or unreachable."
             )
         raise HTTPException(status_code=400, detail=error_text)

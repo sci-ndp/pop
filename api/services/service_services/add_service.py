@@ -1,11 +1,20 @@
 # api/services/service_services/add_service.py
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from api.config import ckan_settings
 
-
 RESERVED_KEYS = {
-    'name', 'title', 'owner_org', 'notes', 'id', 'resources', 'collection',
-    'service_url', 'service_type', 'health_check_url', 'documentation_url'
+    "name",
+    "title",
+    "owner_org",
+    "notes",
+    "id",
+    "resources",
+    "collection",
+    "service_url",
+    "service_type",
+    "health_check_url",
+    "documentation_url",
 }
 
 
@@ -19,7 +28,7 @@ def add_service(
     extras: Optional[Dict[str, Any]] = None,
     health_check_url: Optional[str] = None,
     documentation_url: Optional[str] = None,
-    ckan_instance=None
+    ckan_instance=None,
 ) -> str:
     """
     Add a service resource to CKAN.
@@ -68,10 +77,8 @@ def add_service(
         raised with a detailed message.
     """
     # Validate owner_org must be 'services'
-    if owner_org != 'services':
-        raise ValueError(
-            "owner_org must be 'services' for service registration"
-        )
+    if owner_org != "services":
+        raise ValueError("owner_org must be 'services' for service registration")
 
     # Validate extras parameter
     if not isinstance(extras, (dict, type(None))):
@@ -80,8 +87,7 @@ def add_service(
     # Check for reserved keys in extras
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Decide CKAN instance
@@ -91,11 +97,11 @@ def add_service(
     # Prepare service-specific extras
     service_extras = {}
     if service_type:
-        service_extras['service_type'] = service_type
+        service_extras["service_type"] = service_type
     if health_check_url:
-        service_extras['health_check_url'] = health_check_url
+        service_extras["health_check_url"] = health_check_url
     if documentation_url:
-        service_extras['documentation_url'] = documentation_url
+        service_extras["documentation_url"] = documentation_url
 
     # Merge user extras with service-specific extras
     extras_cleaned = extras.copy() if extras else {}
@@ -104,22 +110,20 @@ def add_service(
     try:
         # Create the service package/dataset in CKAN
         service_package_dict = {
-            'name': service_name,
-            'title': service_title,
-            'owner_org': owner_org,
-            'notes': notes or f"Service: {service_title}"
+            "name": service_name,
+            "title": service_title,
+            "owner_org": owner_org,
+            "notes": notes or f"Service: {service_title}",
         }
 
         # Add extras if any
         if extras_cleaned:
-            service_package_dict['extras'] = [
-                {'key': k, 'value': v} for k, v in extras_cleaned.items()
+            service_package_dict["extras"] = [
+                {"key": k, "value": v} for k, v in extras_cleaned.items()
             ]
 
-        service_package = ckan_instance.action.package_create(
-            **service_package_dict
-        )
-        service_package_id = service_package['id']
+        service_package = ckan_instance.action.package_create(**service_package_dict)
+        service_package_id = service_package["id"]
 
     except Exception as exc:
         raise Exception(f"Error creating service package: {str(exc)}")
@@ -128,16 +132,15 @@ def add_service(
     if service_package_id:
         try:
             resource_description = (
-                f"Service endpoint for {service_title} "
-                f"accessible at {service_url}"
+                f"Service endpoint for {service_title} " f"accessible at {service_url}"
             )
-            
+
             ckan_instance.action.resource_create(
                 package_id=service_package_id,
                 url=service_url,
                 name=service_name,
                 description=resource_description,
-                format="service"
+                format="service",
             )
         except Exception as exc:
             raise Exception(f"Error creating service resource: {str(exc)}")

@@ -1,12 +1,13 @@
 # api/services/status_services/check_api_status.py
 
-from api.config.ckan_settings import ckan_settings
-from api.services import status_services
-from api.services.keycloak_services.introspect_user_token import \
-    get_client_token
 import logging
 
+from api.config.ckan_settings import ckan_settings
+from api.services import status_services
+from api.services.keycloak_services.introspect_user_token import get_client_token
+
 logger = logging.getLogger(__name__)
+
 
 def get_status():
     """
@@ -32,7 +33,7 @@ def get_status():
         "ckan_local_enabled": ckan_settings.ckan_local_enabled,
         "ckan_is_active_local": None,
         "ckan_is_active_global": False,
-        "keycloak_is_active": False
+        "keycloak_is_active": False,
     }
 
     # 1. Check local CKAN if enabled
@@ -40,15 +41,15 @@ def get_status():
         logger.info("Local CKAN is enabled, checking status...")
         try:
             # Defaults to checking local CKAN if no arguments are passed
-            status_dict["ckan_is_active_local"] = \
-                status_services.check_ckan_status()
+            status_dict["ckan_is_active_local"] = status_services.check_ckan_status()
         except Exception:
             status_dict["ckan_is_active_local"] = False
 
     # 2. Check global CKAN
     try:
-        status_dict["ckan_is_active_global"] = \
-            status_services.check_ckan_status(local=False)
+        status_dict["ckan_is_active_global"] = status_services.check_ckan_status(
+            local=False
+        )
     except Exception:
         status_dict["ckan_is_active_global"] = False
 

@@ -1,11 +1,13 @@
 # api/routes/update_routes/put_kafka.py
 
-from fastapi import APIRouter, HTTPException, status, Depends, Query
-from typing import Dict, Any, Literal
-from api.services import kafka_services
-from api.models.update_kafka_model import KafkaDataSourceUpdateRequest
-from api.services.keycloak_services.get_current_user import get_current_user
+from typing import Any, Dict, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from api.config import ckan_settings
+from api.models.update_kafka_model import KafkaDataSourceUpdateRequest
+from api.services import kafka_services
+from api.services.keycloak_services.get_current_user import get_current_user
 
 router = APIRouter()
 
@@ -42,39 +44,33 @@ router = APIRouter()
             "description": "Kafka dataset updated successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "message": "Kafka dataset updated successfully"}
+                    "example": {"message": "Kafka dataset updated successfully"}
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Error updating Kafka dataset: <error>"
-                    }
+                    "example": {"detail": "Error updating Kafka dataset: <error>"}
                 }
-            }
+            },
         },
         404: {
             "description": "Not Found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Kafka dataset not found"}
-                }
-            }
-        }
-    }
+                "application/json": {"example": {"detail": "Kafka dataset not found"}}
+            },
+        },
+    },
 )
 async def update_kafka_datasource(
     dataset_id: str,
     data: KafkaDataSourceUpdateRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local",
-        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
-    _: Dict[str, Any] = Depends(get_current_user)
+    _: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Update a Kafka dataset by dataset_id. If ?server=pre_ckan is used,
@@ -91,8 +87,7 @@ async def update_kafka_datasource(
         if server == "pre_ckan":
             if not ckan_settings.pre_ckan_enabled:
                 raise HTTPException(
-                    status_code=400,
-                    detail="Pre-CKAN is disabled and cannot be used."
+                    status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
             ckan_instance = ckan_settings.pre_ckan
         else:
@@ -110,13 +105,10 @@ async def update_kafka_datasource(
             extras=data.extras,
             mapping=data.mapping,
             processing=data.processing,
-            ckan_instance=ckan_instance  # Pass the chosen instance
+            ckan_instance=ckan_instance,  # Pass the chosen instance
         )
         if not updated:
-            raise HTTPException(
-                status_code=404,
-                detail="Kafka dataset not found"
-            )
+            raise HTTPException(status_code=404, detail="Kafka dataset not found")
         return {"message": "Kafka dataset updated successfully"}
 
     except HTTPException as he:
@@ -126,6 +118,6 @@ async def update_kafka_datasource(
         if "No scheme supplied" in error_msg:
             raise HTTPException(
                 status_code=400,
-                detail="Pre-CKAN server is not configured or unreachable."
+                detail="Pre-CKAN server is not configured or unreachable.",
             )
         raise HTTPException(status_code=400, detail=error_msg)

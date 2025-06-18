@@ -1,10 +1,12 @@
 # api/routes/register_routes/post_service.py
-from fastapi import APIRouter, HTTPException, status, Depends, Query
-from typing import Dict, Any, Literal
-from api.services.service_services.add_service import add_service
+from typing import Any, Dict, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from api.config import ckan_settings
 from api.models.service_request_model import ServiceRequest
 from api.services.keycloak_services.get_current_user import get_current_user
-from api.config import ckan_settings
+from api.services.service_services.add_service import add_service
 from api.services.validation_services.validate_preckan_fields import (
     validate_preckan_fields,
 )
@@ -35,18 +37,18 @@ router = APIRouter()
         "If not provided, defaults to 'local'.\n\n"
         "### Example Payload\n"
         "{\n"
-        '    \"service_name\": \"user_auth_api\",\n'
-        '    \"service_title\": \"User Authentication API\",\n'
-        '    \"owner_org\": \"services\",\n'
-        '    \"service_url\": \"https://api.example.com/auth\",\n'
-        '    \"service_type\": \"API\",\n'
-        '    \"notes\": \"RESTful API for user authentication\",\n'
-        '    \"extras\": {\n'
-        '        \"version\": \"2.1.0\",\n'
-        '        \"environment\": \"production\"\n'
-        '    },\n'
-        '    \"health_check_url\": \"https://api.example.com/auth/health\",\n'
-        '    \"documentation_url\": \"https://docs.example.com/auth-api\"\n'
+        '    "service_name": "user_auth_api",\n'
+        '    "service_title": "User Authentication API",\n'
+        '    "owner_org": "services",\n'
+        '    "service_url": "https://api.example.com/auth",\n'
+        '    "service_type": "API",\n'
+        '    "notes": "RESTful API for user authentication",\n'
+        '    "extras": {\n'
+        '        "version": "2.1.0",\n'
+        '        "environment": "production"\n'
+        "    },\n"
+        '    "health_check_url": "https://api.example.com/auth/health",\n'
+        '    "documentation_url": "https://docs.example.com/auth-api"\n'
         "}\n"
     ),
     responses={
@@ -56,7 +58,7 @@ router = APIRouter()
                 "application/json": {
                     "example": {"id": "12345678-abcd-efgh-ijkl-1234567890ab"}
                 }
-            }
+            },
         },
         409: {
             "description": "Conflict - Duplicate service",
@@ -68,11 +70,11 @@ router = APIRouter()
                             "detail": (
                                 "A service with the given name or URL "
                                 "already exists."
-                            )
+                            ),
                         }
                     }
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
@@ -86,35 +88,30 @@ router = APIRouter()
                                     "owner_org must be 'services' for "
                                     "service registration"
                                 )
-                            }
+                            },
                         },
                         "server_error": {
                             "summary": "Server configuration error",
                             "value": {
-                                "detail": (
-                                    "Server is not configured or unreachable."
-                                )
-                            }
+                                "detail": ("Server is not configured or unreachable.")
+                            },
                         },
                         "general_error": {
                             "summary": "General error",
-                            "value": {
-                                "detail": "Error creating service: <error>"
-                            }
-                        }
+                            "value": {"detail": "Error creating service: <error>"},
+                        },
                     }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def create_service(
     data: ServiceRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local",
-        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
-    _: Dict[str, Any] = Depends(get_current_user)
+    _: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Register a new service and its associated metadata to the system.
@@ -146,8 +143,7 @@ async def create_service(
         if server == "pre_ckan":
             if not ckan_settings.pre_ckan_enabled:
                 raise HTTPException(
-                    status_code=400,
-                    detail="Pre-CKAN is disabled and cannot be used."
+                    status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
 
             document = data.dict()
@@ -157,7 +153,7 @@ async def create_service(
                 raise HTTPException(
                     status_code=400,
                     detail=f"Missing required fields for pre_ckan: "
-                           f"{missing_fields}"
+                    f"{missing_fields}",
                 )
 
             ckan_instance = ckan_settings.pre_ckan
@@ -174,46 +170,43 @@ async def create_service(
             extras=data.extras,
             health_check_url=data.health_check_url,
             documentation_url=data.documentation_url,
-            ckan_instance=ckan_instance
+            ckan_instance=ckan_instance,
         )
         return {"id": service_id}
 
     except ValueError as exc:
         # Handle validation errors (e.g., wrong owner_org)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except KeyError as exc:
         # Handle reserved key errors
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Reserved key error: {str(exc)}"
+            detail=f"Reserved key error: {str(exc)}",
         )
     except Exception as exc:
         error_msg = str(exc)
-        
+
         # Handle specific error cases
         if "No scheme supplied" in error_msg:
             raise HTTPException(
-                status_code=400,
-                detail="Server is not configured or unreachable."
+                status_code=400, detail="Server is not configured or unreachable."
             )
-        if ("That URL is already in use" in error_msg
-                or "That name is already in use" in error_msg):
+        if (
+            "That URL is already in use" in error_msg
+            or "That name is already in use" in error_msg
+        ):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={
                     "error": "Duplicate Service",
                     "detail": (
-                        "A service with the given name or URL "
-                        "already exists."
-                    )
-                }
+                        "A service with the given name or URL " "already exists."
+                    ),
+                },
             )
-        
+
         # Generic error handling
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error creating service: {error_msg}"
+            detail=f"Error creating service: {error_msg}",
         )

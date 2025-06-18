@@ -1,10 +1,11 @@
 # api/routes/register_routes/post_organization.py
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from typing import Any, Dict, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from api.models import OrganizationRequest
 from api.services import organization_services
-from typing import Dict, Any, Literal
 from api.services.keycloak_services.get_current_user import get_current_user
-
 
 router = APIRouter()
 
@@ -15,8 +16,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     summary="Create a new organization",
     description=(
-        "Create a new organization with the given name, title, "
-        "and description."
+        "Create a new organization with the given name, title, " "and description."
     ),
     responses={
         201: {
@@ -28,27 +28,24 @@ router = APIRouter()
                         "message": "Organization created successfully",
                     }
                 }
-            }
+            },
         },
         400: {
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Organization name already exists."
-                    }
+                    "example": {"detail": "Organization name already exists."}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def create_organization_endpoint(
     org: OrganizationRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local",
-        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
-    _: Dict[str, Any] = Depends(get_current_user)
+    _: Dict[str, Any] = Depends(get_current_user),
 ):
     """
     Endpoint to create a new organization in CKAN.
@@ -75,10 +72,7 @@ async def create_organization_endpoint(
     """
     try:
         organization_id = organization_services.create_organization(
-            name=org.name,
-            title=org.title,
-            description=org.description,
-            server=server
+            name=org.name, title=org.title, description=org.description, server=server
         )
         return {
             "id": organization_id,
