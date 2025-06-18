@@ -11,7 +11,7 @@ def test_public_variable_default():
     """
     with patch.dict(os.environ, {}, clear=True):
         settings = Settings()
-        assert settings.public is True
+        assert settings.is_public is True
 
 
 def test_public_variable_true():
@@ -21,7 +21,7 @@ def test_public_variable_true():
     """
     with patch.dict(os.environ, {"PUBLIC": "True"}):
         settings = Settings()
-        assert settings.public is True
+        assert settings.is_public is True
 
 
 def test_public_variable_false():
@@ -31,4 +31,4 @@ def test_public_variable_false():
     """
     with patch.dict(os.environ, {"PUBLIC": "False"}):
         settings = Settings()
-        assert settings.public is False
+        assert settings.is_public is False
