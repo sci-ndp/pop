@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.main import app
 from api.config.ckan_settings import ckan_settings
+from api.main import app
 
 client = TestClient(app)
 
