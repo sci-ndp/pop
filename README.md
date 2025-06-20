@@ -1,4 +1,3 @@
-[![CI Pipeline](https://github.com/sci-ndp/pop/actions/workflows/ci.yml/badge.svg)](https://github.com/sci-ndp/pop/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-71%25-green.svg)](https://github.com/sci-ndp/pop/actions)
 [![Flake8](https://img.shields.io/badge/flake8-passing-brightgreen.svg)](https://github.com/sci-ndp/pop/actions)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
