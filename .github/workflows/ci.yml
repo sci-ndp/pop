@@ -57,7 +57,7 @@ jobs:
         run: mypy . || echo "Type checking failed but continuing..."
         continue-on-error: true
 
-  # Full tests - Tests completos con badges dinámicos
+  # Full tests - Tests completos usando docker-compose
   full-tests:
     runs-on: ubuntu-latest
     needs: quick-checks
@@ -67,7 +67,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Cache Docker layers
@@ -78,88 +78,110 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Create environment file
+      # Crear archivo .env para el CI (si no existe)
+      - name: Create CI environment file
         run: |
-          echo "Creating .env file for CI testing..."
-          cat > .env << EOF
-          # CKAN Configuration
-          CKAN_LOCAL_ENABLED=false
+          if [ ! -f .env ]; then
+            echo "Creating .env file for CI..."
+            cat > .env << EOF
+          # CI Environment Configuration
           CKAN_URL=http://localhost:5000
-          CKAN_GLOBAL_URL=https://global-ckan.example.com
           CKAN_API_KEY=test-api-key
-          
-          # Pre-CKAN Configuration
-          PRE_CKAN_ENABLED=false
-          PRE_CKAN_URL=
-          PRE_CKAN_API_KEY=
-          
-          # Streaming Configuration
-          KAFKA_CONNECTION=false
-          KAFKA_HOST=localhost
-          KAFKA_PORT=9092
-          
-          # Keycloak Authentication
-          KEYCLOAK_URL=http://localhost:8080
-          REALM_NAME=test-realm
-          CLIENT_ID=test-client
-          CLIENT_SECRET=test-secret
-          
-          # Test credentials
-          TEST_USERNAME=test_user
-          TEST_PASSWORD=test_pass
-          
-          # Swagger settings
-          SWAGGER_TITLE=POP API Test
-          SWAGGER_DESCRIPTION=Test environment
-          ORGANIZATION=Test Organization
-          
-          # External services
-          USE_JUPYTERLAB=false
-          JUPYTER_URL=
-          USE_DXSPACES=false
-          DXSPACES_URL=
+          ORGANIZATION=test-org
+          PUBLIC=false
+          # Add other required environment variables here
           EOF
+          else
+            echo ".env file already exists"
+          fi
 
-      - name: Start Docker containers
+      # Iniciar servicios con docker-compose
+      - name: Start services with docker-compose
         run: |
-          echo "Starting Docker containers with docker-compose..."
-          docker-compose up -d
-          echo "Containers started successfully"
+          echo "=== Starting services with docker-compose ==="
+          
+          # Verificar que docker-compose.yml existe
+          if [ ! -f docker-compose.yml ]; then
+            echo "❌ docker-compose.yml not found!"
+            exit 1
+          fi
+          
+          # Mostrar configuración de docker-compose
+          echo "Docker Compose services:"
+          docker-compose config --services
+          
+          # Iniciar servicios en background
+          docker-compose up -d --build
+          
+          echo "=== Services started ==="
+          docker-compose ps
 
-      - name: Wait for container and install test dependencies
+      # Esperar a que el servicio esté listo
+      - name: Wait for API service to be ready
         run: |
-          echo "Waiting for container to be ready..."
+          echo "Waiting for API service to be ready..."
+          
+          # Determinar el nombre del contenedor de la API
+          # Ajusta este nombre según tu docker-compose.yml
+          API_CONTAINER=$(docker-compose ps -q api || docker-compose ps -q pop-api || echo "")
+          
+          if [ -z "$API_CONTAINER" ]; then
+            echo "Looking for API container by pattern..."
+            API_CONTAINER=$(docker ps --format "table {{.Names}}" | grep -E "(api|pop)" | head -1)
+          fi
+          
+          if [ -z "$API_CONTAINER" ]; then
+            echo "❌ Could not find API container"
+            echo "Available containers:"
+            docker-compose ps
+            exit 1
+          fi
+          
+          echo "Found API container: $API_CONTAINER"
+          
+          # Esperar a que el servicio esté listo
           timeout=120
           while [ $timeout -gt 0 ]; do
-            if docker exec pop-api python -c "import fastapi" 2>/dev/null; then
-              echo "Container is ready with dependencies installed"
+            if docker exec $API_CONTAINER python -c "import fastapi; print('FastAPI available')" 2>/dev/null; then
+              echo "✅ API container is ready"
               break
             fi
-            echo "Waiting for dependencies... ($timeout seconds left)"
+            echo "Waiting for API container... ($timeout seconds left)"
             sleep 5
             timeout=$((timeout-5))
           done
           
           if [ $timeout -eq 0 ]; then
-            echo "Timeout waiting for dependencies"
-            docker logs pop-api
+            echo "❌ Timeout waiting for API container"
+            echo "=== Container logs ==="
+            docker-compose logs $API_CONTAINER
             exit 1
           fi
           
-          # Install test dependencies
-          docker exec pop-api pip install --no-cache-dir \
+          # Guardar nombre del contenedor para pasos siguientes
+          echo "API_CONTAINER=$API_CONTAINER" >> $GITHUB_ENV
+
+      # Instalar dependencias de test
+      - name: Install test dependencies
+        run: |
+          echo "=== Installing test dependencies ==="
+          docker exec $API_CONTAINER pip install --no-cache-dir \
             pytest==8.4.1 \
             pytest-cov==6.2.1 \
             pytest-asyncio==1.0.0
+          
+          echo "=== Verifying test dependencies ==="
+          docker exec $API_CONTAINER python -c "import pytest; print('pytest OK')"
 
-      # Ejecutar tests con coverage tracking para badge
-      - name: Run working tests with coverage
+      # Ejecutar tests con coverage
+      - name: Run tests with coverage
         id: coverage
         run: |
           echo "=== Running tests (excluding problematic mock tests) ==="
+          
           docker exec -e PYTHONPATH=/code \
                      -e PYTHONDONTWRITEBYTECODE=1 \
-                     pop-api pytest \
+                     $API_CONTAINER pytest \
                      --ignore=tests/test_add_service.py \
                      --ignore=tests/test_add_url.py \
                      --ignore=tests/test_search_datasets_by_terms.py \
@@ -172,25 +194,43 @@ jobs:
                      --tb=short \
                      --disable-warnings | tee coverage_output.txt
           
-          # Extract coverage percentage
-          COVERAGE=$(docker exec pop-api cat coverage.xml | grep -o 'line-rate="[0-9.]*"' | head -1 | grep -o '[0-9.]*' | awk '{print int($1*100)}')
-          echo "Coverage: ${COVERAGE}%"
-          echo "coverage_percent=${COVERAGE}" >> $GITHUB_OUTPUT
+          # Copiar archivo de coverage del contenedor
+          docker cp $API_CONTAINER:/code/coverage.xml ./coverage.xml
           
-          # Determine coverage badge color
-          if [ $COVERAGE -ge 80 ]; then
-            echo "coverage_color=brightgreen" >> $GITHUB_OUTPUT
-          elif [ $COVERAGE -ge 70 ]; then
-            echo "coverage_color=green" >> $GITHUB_OUTPUT
-          elif [ $COVERAGE -ge 60 ]; then
-            echo "coverage_color=yellow" >> $GITHUB_OUTPUT
+          # Extraer porcentaje de coverage
+          if [ -f coverage.xml ]; then
+            COVERAGE=$(grep -o 'line-rate="[0-9.]*"' coverage.xml | head -1 | grep -o '[0-9.]*' | awk '{print int($1*100)}')
+            echo "Coverage: ${COVERAGE}%"
+            echo "coverage_percent=${COVERAGE}" >> $GITHUB_OUTPUT
+            
+            # Determinar color del badge de coverage
+            if [ $COVERAGE -ge 80 ]; then
+              echo "coverage_color=brightgreen" >> $GITHUB_OUTPUT
+            elif [ $COVERAGE -ge 70 ]; then
+              echo "coverage_color=green" >> $GITHUB_OUTPUT
+            elif [ $COVERAGE -ge 60 ]; then
+              echo "coverage_color=yellow" >> $GITHUB_OUTPUT
+            else
+              echo "coverage_color=red" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "coverage_color=red" >> $GITHUB_OUTPUT
+            echo "coverage_percent=unknown" >> $GITHUB_OUTPUT
+            echo "coverage_color=lightgrey" >> $GITHUB_OUTPUT
           fi
           
           echo "=== Tests completed successfully ==="
 
-      # Create or update badges (solo en main branch)
+      # Mostrar logs en caso de fallo
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          echo "=== CONTAINER LOGS (Last 100 lines) ==="
+          docker-compose logs --tail=100
+          
+          echo "=== CONTAINER STATUS ==="
+          docker-compose ps
+
+      # Crear badges dinámicos
       - name: Update badges
         if: github.ref == 'refs/heads/main'
         run: |
@@ -240,6 +280,7 @@ jobs:
           echo "📊 Coverage: ${{ steps.coverage.outputs.coverage_percent }}%"
           echo "🎨 Code Style: ${{ needs.quick-checks.outputs.flake8_status }}"
 
+      # Upload coverage to Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -247,12 +288,15 @@ jobs:
           fail_ci_if_error: false
         continue-on-error: true
 
-      - name: Cleanup containers
+      # Limpiar servicios
+      - name: Stop and cleanup services
         if: always()
         run: |
-          echo "Stopping Docker containers..."
-          docker-compose down -v
-          echo "Containers stopped and cleaned up"
+          echo "=== Stopping services ==="
+          docker-compose down -v --remove-orphans
+          
+          echo "=== Cleaning up Docker resources ==="
+          docker system prune -f || true
 
   # Notification job for failures
   notify-failure:
