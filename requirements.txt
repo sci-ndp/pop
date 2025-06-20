@@ -13,3 +13,4 @@ pytest-asyncio
 psutil
 requests
 fastapi-utils
+pytest-cov
