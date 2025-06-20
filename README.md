@@ -1,5 +1,7 @@
-[![Contributor Covenant](https://img.shields.io/badge/code%20of%20conduct-Contributor%20Covenant-brightgreen.svg)](CODE_OF_CONDUCT.md)
-
+[![CI Pipeline](https://github.com/TU_USUARIO/TU_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/TU_USUARIO/TU_REPO/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/.github/badges/coverage.json)](https://github.com/TU_USUARIO/TU_REPO/actions)
+[![Flake8](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/.github/badges/flake8.json)](https://github.com/TU_USUARIO/TU_REPO/actions)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # Point Of Presence API (POP API)
 
 A RESTful API to manage and interact with Point of Presence (POP) resources. The POP API provides endpoints for creating, retrieving, updating, and deleting the resources.

@@ -36,16 +36,28 @@ jobs:
         run: isort --check-only --diff . || echo "Import sorting issues found"
         continue-on-error: true
 
-      - name: Run flake8 linting (relaxed rules)
+      # Flake8 check with proper exit code for badge
+      - name: Run flake8 linting
+        id: flake8
         run: |
+          echo "Running flake8 checks..."
           flake8 . --count --select=E9,F63,F7,F82 --show-source \
-          --statistics --max-line-length=88
+          --statistics --max-line-length=88 > flake8_results.txt 2>&1
+          
+          if [ $? -eq 0 ]; then
+            echo "flake8_status=passing" >> $GITHUB_OUTPUT
+            echo "✅ Flake8 checks passed"
+          else
+            echo "flake8_status=failing" >> $GITHUB_OUTPUT
+            echo "❌ Flake8 checks failed"
+            cat flake8_results.txt
+          fi
 
       - name: Type checking with mypy (non-blocking)
         run: mypy . || echo "Type checking failed but continuing..."
         continue-on-error: true
 
-  # Full tests - Tests completos (10-15 min) - SIN los tests problemáticos
+  # Full tests - Tests completos con badges dinámicos
   full-tests:
     runs-on: ubuntu-latest
     needs: quick-checks
@@ -98,8 +110,9 @@ jobs:
             pytest-cov==6.2.1 \
             pytest-asyncio==1.0.0
 
-      # Ejecutar solo los tests que funcionan (excluyendo los problemáticos)
+      # Ejecutar tests con coverage tracking para badge
       - name: Run working tests with coverage
+        id: coverage
         run: |
           echo "=== Running tests (excluding problematic mock tests) ==="
           docker exec -e PYTHONPATH=/code \
@@ -115,18 +128,77 @@ jobs:
                      --cov-report=term-missing \
                      --verbose \
                      --tb=short \
-                     --disable-warnings
+                     --disable-warnings | tee coverage_output.txt
           
-          echo "=== Tests completed successfully (excluding mock-problematic tests) ==="
+          # Extract coverage percentage
+          COVERAGE=$(docker exec pop-api cat coverage.xml | grep -o 'line-rate="[0-9.]*"' | head -1 | grep -o '[0-9.]*' | awk '{print int($1*100)}')
+          echo "Coverage: ${COVERAGE}%"
+          echo "coverage_percent=${COVERAGE}" >> $GITHUB_OUTPUT
+          
+          # Determine coverage badge color
+          if [ $COVERAGE -ge 80 ]; then
+            echo "coverage_color=brightgreen" >> $GITHUB_OUTPUT
+          elif [ $COVERAGE -ge 70 ]; then
+            echo "coverage_color=green" >> $GITHUB_OUTPUT
+          elif [ $COVERAGE -ge 60 ]; then
+            echo "coverage_color=yellow" >> $GITHUB_OUTPUT
+          else
+            echo "coverage_color=red" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "=== Tests completed successfully ==="
+
+      # Create or update badges (solo en main branch)
+      - name: Update badges
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Create badges directory if it doesn't exist
+          mkdir -p .github/badges
+          
+          # Create coverage badge
+          COVERAGE="${{ steps.coverage.outputs.coverage_percent }}"
+          COLOR="${{ steps.coverage.outputs.coverage_color }}"
+          
+          # Generate coverage badge JSON
+          cat > .github/badges/coverage.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "coverage",
+            "message": "${COVERAGE}%",
+            "color": "${COLOR}"
+          }
+          EOF
+          
+          # Generate flake8 badge JSON
+          FLAKE8_STATUS="${{ needs.quick-checks.outputs.flake8_status }}"
+          if [ "$FLAKE8_STATUS" = "passing" ]; then
+            FLAKE8_COLOR="brightgreen"
+            FLAKE8_MESSAGE="passing"
+          else
+            FLAKE8_COLOR="red"
+            FLAKE8_MESSAGE="failing"
+          fi
+          
+          cat > .github/badges/flake8.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "flake8",
+            "message": "${FLAKE8_MESSAGE}",
+            "color": "${FLAKE8_COLOR}"
+          }
+          EOF
+          
+          echo "Badges created with coverage: ${COVERAGE}% and flake8: ${FLAKE8_STATUS}"
 
       - name: Show test summary
         run: |
           echo "=== TEST SUMMARY ==="
           echo "✅ Executed: Model tests, basic functionality tests"
           echo "⏭️  Skipped: Mock-dependent tests (add_service, add_url, search, update)"
-          echo "📊 Coverage report generated for executed tests only"
+          echo "📊 Coverage: ${{ steps.coverage.outputs.coverage_percent }}%"
+          echo "🎨 Code Style: ${{ needs.quick-checks.outputs.flake8_status }}"
 
-      - name: Upload coverage to Codecov (optional)
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
