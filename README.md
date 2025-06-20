@@ -277,9 +277,3 @@ The POP API automatically collects and logs system metrics every 10 minutes:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [API Docs](http://localhost:8001/docs)
-- **Issues**: [GitHub Issues](https://github.com/sci-ndp/pop/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/sci-ndp/pop/discussions)

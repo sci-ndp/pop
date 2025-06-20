@@ -315,12 +315,6 @@ Any other relevant information.
 - **Follow the code of conduct**
 - **Ask questions** if you're unsure about something
 
-## 📧 Getting Help
-
-- **GitHub Issues**: For bug reports and feature requests
-- **GitHub Discussions**: For questions and general discussion
-- **Code Review**: Maintainers will provide feedback on PRs
-
 ---
 
 Thank you for contributing to POP API! 🎉
