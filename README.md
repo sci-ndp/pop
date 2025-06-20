@@ -1,6 +1,6 @@
-[![CI Pipeline](https://github.com/TU_USUARIO/TU_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/TU_USUARIO/TU_REPO/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/.github/badges/coverage.json)](https://github.com/TU_USUARIO/TU_REPO/actions)
-[![Flake8](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/.github/badges/flake8.json)](https://github.com/TU_USUARIO/TU_REPO/actions)
+[![CI Pipeline](https://github.com/sci-ndp/pop/actions/workflows/ci.yml/badge.svg)](https://github.com/sci-ndp/pop/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-51%25-yellow.svg)](https://github.com/sci-ndp/pop/actions)
+[![Flake8](https://img.shields.io/badge/flake8-passing-brightgreen.svg)](https://github.com/sci-ndp/pop/actions)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # Point Of Presence API (POP API)
 
