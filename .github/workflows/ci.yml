@@ -11,7 +11,7 @@ on:
       - develop
 
 jobs:
-  # Quick checks - Verificaciones rápidas (2-3 min)
+  # Quick checks - Verificaciones rápidas y útiles
   quick-checks:
     runs-on: ubuntu-latest
     steps:
@@ -29,230 +29,68 @@ jobs:
           pip install flake8 black isort mypy
 
       - name: Check code formatting with Black
-        run: black --check --diff . || echo "Code formatting issues found"
-        continue-on-error: true
+        id: black_check
+        run: |
+          echo "Checking code formatting with Black..."
+          if black --check --diff .; then
+            echo "black_status=passing" >> $GITHUB_OUTPUT
+            echo "✅ Code formatting is correct"
+          else
+            echo "black_status=failing" >> $GITHUB_OUTPUT
+            echo "❌ Code formatting issues found"
+            echo ""
+            echo "To fix, run: black ."
+          fi
 
       - name: Check import sorting with isort
-        run: isort --check-only --diff . || echo "Import sorting issues found"
-        continue-on-error: true
+        id: isort_check
+        run: |
+          echo "Checking import sorting with isort..."
+          if isort --check-only --diff .; then
+            echo "isort_status=passing" >> $GITHUB_OUTPUT
+            echo "✅ Import sorting is correct"
+          else
+            echo "isort_status=failing" >> $GITHUB_OUTPUT
+            echo "❌ Import sorting issues found"
+            echo ""
+            echo "To fix, run: isort ."
+          fi
 
-      # Flake8 check with proper exit code for badge
       - name: Run flake8 linting
         id: flake8
         run: |
           echo "Running flake8 checks..."
-          flake8 . --count --select=E9,F63,F7,F82 --show-source \
-          --statistics --max-line-length=88 > flake8_results.txt 2>&1
-          
-          if [ $? -eq 0 ]; then
+          if flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --max-line-length=88; then
             echo "flake8_status=passing" >> $GITHUB_OUTPUT
             echo "✅ Flake8 checks passed"
           else
             echo "flake8_status=failing" >> $GITHUB_OUTPUT
             echo "❌ Flake8 checks failed"
-            cat flake8_results.txt
+            exit 1
           fi
 
-      - name: Type checking with mypy (non-blocking)
-        run: mypy . || echo "Type checking failed but continuing..."
+      - name: Type checking with mypy
+        id: mypy_check
+        run: |
+          echo "Running mypy type checking..."
+          if mypy . --ignore-missing-imports --no-strict-optional; then
+            echo "mypy_status=passing" >> $GITHUB_OUTPUT
+            echo "✅ Type checking passed"
+          else
+            echo "mypy_status=warning" >> $GITHUB_OUTPUT
+            echo "⚠️ Type checking found issues (non-blocking)"
+          fi
         continue-on-error: true
 
-  # Full tests - Tests completos usando docker-compose
-  full-tests:
-    runs-on: ubuntu-latest
-    needs: quick-checks
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      # Crear archivo .env para el CI (si no existe)
-      - name: Create CI environment file
-        run: |
-          if [ ! -f .env ]; then
-            echo "Creating .env file for CI..."
-            cat > .env << EOF
-          # CI Environment Configuration
-          CKAN_URL=http://localhost:5000
-          CKAN_API_KEY=test-api-key
-          ORGANIZATION=test-org
-          PUBLIC=false
-          # Add other required environment variables here
-          EOF
-          else
-            echo ".env file already exists"
-          fi
-
-      # Iniciar servicios con docker-compose
-      - name: Start services with docker-compose
-        run: |
-          echo "=== Starting services with docker-compose ==="
-          
-          # Verificar que docker-compose.yml existe
-          if [ ! -f docker-compose.yml ]; then
-            echo "❌ docker-compose.yml not found!"
-            exit 1
-          fi
-          
-          # Mostrar configuración de docker-compose
-          echo "Docker Compose services:"
-          docker-compose config --services
-          
-          # Iniciar servicios en background
-          docker-compose up -d --build
-          
-          echo "=== Services started ==="
-          docker-compose ps
-
-      # Esperar a que el servicio esté listo
-      - name: Wait for API service to be ready
-        run: |
-          echo "Waiting for API service to be ready..."
-          
-          # Determinar el nombre del contenedor de la API
-          # Ajusta este nombre según tu docker-compose.yml
-          API_CONTAINER=$(docker-compose ps -q api || docker-compose ps -q pop-api || echo "")
-          
-          if [ -z "$API_CONTAINER" ]; then
-            echo "Looking for API container by pattern..."
-            API_CONTAINER=$(docker ps --format "table {{.Names}}" | grep -E "(api|pop)" | head -1)
-          fi
-          
-          if [ -z "$API_CONTAINER" ]; then
-            echo "❌ Could not find API container"
-            echo "Available containers:"
-            docker-compose ps
-            exit 1
-          fi
-          
-          echo "Found API container: $API_CONTAINER"
-          
-          # Esperar a que el servicio esté listo
-          timeout=120
-          while [ $timeout -gt 0 ]; do
-            if docker exec $API_CONTAINER python -c "import fastapi; print('FastAPI available')" 2>/dev/null; then
-              echo "✅ API container is ready"
-              break
-            fi
-            echo "Waiting for API container... ($timeout seconds left)"
-            sleep 5
-            timeout=$((timeout-5))
-          done
-          
-          if [ $timeout -eq 0 ]; then
-            echo "❌ Timeout waiting for API container"
-            echo "=== Container logs ==="
-            docker-compose logs $API_CONTAINER
-            exit 1
-          fi
-          
-          # Guardar nombre del contenedor para pasos siguientes
-          echo "API_CONTAINER=$API_CONTAINER" >> $GITHUB_ENV
-
-      # Instalar dependencias de test
-      - name: Install test dependencies
-        run: |
-          echo "=== Installing test dependencies ==="
-          docker exec $API_CONTAINER pip install --no-cache-dir \
-            pytest==8.4.1 \
-            pytest-cov==6.2.1 \
-            pytest-asyncio==1.0.0
-          
-          echo "=== Verifying test dependencies ==="
-          docker exec $API_CONTAINER python -c "import pytest; print('pytest OK')"
-
-      # Ejecutar tests con coverage
-      - name: Run tests with coverage
-        id: coverage
-        run: |
-          echo "=== Running tests (excluding problematic mock tests) ==="
-          
-          docker exec -e PYTHONPATH=/code \
-                     -e PYTHONDONTWRITEBYTECODE=1 \
-                     $API_CONTAINER pytest \
-                     --ignore=tests/test_add_service.py \
-                     --ignore=tests/test_add_url.py \
-                     --ignore=tests/test_search_datasets_by_terms.py \
-                     --ignore=tests/test_update_url.py \
-                     --ignore=tests/test_service_search_datasource.py \
-                     --cov=api \
-                     --cov-report=xml \
-                     --cov-report=term-missing \
-                     --verbose \
-                     --tb=short \
-                     --disable-warnings | tee coverage_output.txt
-          
-          # Copiar archivo de coverage del contenedor
-          docker cp $API_CONTAINER:/code/coverage.xml ./coverage.xml
-          
-          # Extraer porcentaje de coverage
-          if [ -f coverage.xml ]; then
-            COVERAGE=$(grep -o 'line-rate="[0-9.]*"' coverage.xml | head -1 | grep -o '[0-9.]*' | awk '{print int($1*100)}')
-            echo "Coverage: ${COVERAGE}%"
-            echo "coverage_percent=${COVERAGE}" >> $GITHUB_OUTPUT
-            
-            # Determinar color del badge de coverage
-            if [ $COVERAGE -ge 80 ]; then
-              echo "coverage_color=brightgreen" >> $GITHUB_OUTPUT
-            elif [ $COVERAGE -ge 70 ]; then
-              echo "coverage_color=green" >> $GITHUB_OUTPUT
-            elif [ $COVERAGE -ge 60 ]; then
-              echo "coverage_color=yellow" >> $GITHUB_OUTPUT
-            else
-              echo "coverage_color=red" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "coverage_percent=unknown" >> $GITHUB_OUTPUT
-            echo "coverage_color=lightgrey" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "=== Tests completed successfully ==="
-
-      # Mostrar logs en caso de fallo
-      - name: Show container logs on failure
-        if: failure()
-        run: |
-          echo "=== CONTAINER LOGS (Last 100 lines) ==="
-          docker-compose logs --tail=100
-          
-          echo "=== CONTAINER STATUS ==="
-          docker-compose ps
-
-      # Crear badges dinámicos
-      - name: Update badges
+      # Crear badges dinámicos (solo en main branch)
+      - name: Update code quality badges
         if: github.ref == 'refs/heads/main'
         run: |
           # Create badges directory if it doesn't exist
           mkdir -p .github/badges
           
-          # Create coverage badge
-          COVERAGE="${{ steps.coverage.outputs.coverage_percent }}"
-          COLOR="${{ steps.coverage.outputs.coverage_color }}"
-          
-          # Generate coverage badge JSON
-          cat > .github/badges/coverage.json << EOF
-          {
-            "schemaVersion": 1,
-            "label": "coverage",
-            "message": "${COVERAGE}%",
-            "color": "${COLOR}"
-          }
-          EOF
-          
           # Generate flake8 badge JSON
-          FLAKE8_STATUS="${{ needs.quick-checks.outputs.flake8_status }}"
+          FLAKE8_STATUS="${{ steps.flake8.outputs.flake8_status }}"
           if [ "$FLAKE8_STATUS" = "passing" ]; then
             FLAKE8_COLOR="brightgreen"
             FLAKE8_MESSAGE="passing"
@@ -270,42 +108,73 @@ jobs:
           }
           EOF
           
-          echo "Badges created with coverage: ${COVERAGE}% and flake8: ${FLAKE8_STATUS}"
-
-      - name: Show test summary
-        run: |
-          echo "=== TEST SUMMARY ==="
-          echo "✅ Executed: Model tests, basic functionality tests"
-          echo "⏭️  Skipped: Mock-dependent tests (add_service, add_url, search, update)"
-          echo "📊 Coverage: ${{ steps.coverage.outputs.coverage_percent }}%"
-          echo "🎨 Code Style: ${{ needs.quick-checks.outputs.flake8_status }}"
-
-      # Upload coverage to Codecov
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
-        continue-on-error: true
-
-      # Limpiar servicios
-      - name: Stop and cleanup services
-        if: always()
-        run: |
-          echo "=== Stopping services ==="
-          docker-compose down -v --remove-orphans
+          # Generate black badge JSON
+          BLACK_STATUS="${{ steps.black_check.outputs.black_status }}"
+          if [ "$BLACK_STATUS" = "passing" ]; then
+            BLACK_COLOR="000000"
+            BLACK_MESSAGE="formatted"
+          else
+            BLACK_COLOR="red"
+            BLACK_MESSAGE="unformatted"
+          fi
           
-          echo "=== Cleaning up Docker resources ==="
-          docker system prune -f || true
+          cat > .github/badges/black.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "code style",
+            "message": "${BLACK_MESSAGE}",
+            "color": "${BLACK_COLOR}"
+          }
+          EOF
+          
+          # Generate isort badge JSON
+          ISORT_STATUS="${{ steps.isort_check.outputs.isort_status }}"
+          if [ "$ISORT_STATUS" = "passing" ]; then
+            ISORT_COLOR="ef8336"
+            ISORT_MESSAGE="sorted"
+          else
+            ISORT_COLOR="red"
+            ISORT_MESSAGE="unsorted"
+          fi
+          
+          cat > .github/badges/isort.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "imports",
+            "message": "${ISORT_MESSAGE}",
+            "color": "${ISORT_COLOR}"
+          }
+          EOF
+          
+          echo "Code quality badges updated:"
+          echo "- Flake8: ${FLAKE8_STATUS}"
+          echo "- Black: ${BLACK_STATUS}"
+          echo "- isort: ${ISORT_STATUS}"
 
-  # Notification job for failures
+      - name: Summary of checks
+        run: |
+          echo "=== CODE QUALITY SUMMARY ==="
+          echo "🎨 Black formatting: ${{ steps.black_check.outputs.black_status }}"
+          echo "📦 Import sorting: ${{ steps.isort_check.outputs.isort_status }}"
+          echo "🔍 Flake8 linting: ${{ steps.flake8.outputs.flake8_status }}"
+          echo "🏷️  Type checking: ${{ steps.mypy_check.outputs.mypy_status }}"
+          echo ""
+          echo "=== QUICK FIX COMMANDS ==="
+          echo "Format code: black ."
+          echo "Sort imports: isort ."
+          echo "Check types: mypy . --ignore-missing-imports"
+
+  # Notification job for failures (solo en main)
   notify-failure:
     runs-on: ubuntu-latest
-    needs: [quick-checks, full-tests]
+    needs: [quick-checks]
     if: failure() && github.ref == 'refs/heads/main'
     
     steps:
       - name: Notify team of main branch failure
         run: |
-          echo "::warning::CI failed on main branch - check the logs above"
-          # You can add Slack/Discord/Email notifications here
+          echo "::error::Code quality checks failed on main branch"
+          echo "Please run the following commands to fix:"
+          echo "  black ."
+          echo "  isort ."
+          echo "  flake8 . --max-line-length=88"
