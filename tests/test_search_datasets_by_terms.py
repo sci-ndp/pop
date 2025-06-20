@@ -5,9 +5,6 @@ import pytest
 from ckanapi import CKANAPIError, NotFound
 from fastapi import HTTPException
 
-# # Add the parent directory to sys.path to allow imports
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from api.services.datasource_services.search_datasets_by_terms import (
     escape_solr_special_chars,
     search_datasets_by_terms,

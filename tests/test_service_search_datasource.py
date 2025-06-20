@@ -1,12 +1,7 @@
 # tests/test_service_search_datasource.py
-import os
-import sys
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
-# Add the parent directory to sys.path to allow imports
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from api.services.datasource_services.search_datasource import (
     stream_matches_keywords,

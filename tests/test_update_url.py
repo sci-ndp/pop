@@ -1,12 +1,7 @@
 # tests/test_update_url.py
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Add the parent directory to sys.path to allow imports
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from api.services.url_services.update_url import (
     RESERVED_KEYS,
