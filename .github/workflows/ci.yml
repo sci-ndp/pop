@@ -78,11 +78,53 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Make scripts executable
-        run: chmod +x start-dockers.sh stop-dockers.sh
+      - name: Create environment file
+        run: |
+          echo "Creating .env file for CI testing..."
+          cat > .env << EOF
+          # CKAN Configuration
+          CKAN_LOCAL_ENABLED=false
+          CKAN_URL=http://localhost:5000
+          CKAN_GLOBAL_URL=https://global-ckan.example.com
+          CKAN_API_KEY=test-api-key
+          
+          # Pre-CKAN Configuration
+          PRE_CKAN_ENABLED=false
+          PRE_CKAN_URL=
+          PRE_CKAN_API_KEY=
+          
+          # Streaming Configuration
+          KAFKA_CONNECTION=false
+          KAFKA_HOST=localhost
+          KAFKA_PORT=9092
+          
+          # Keycloak Authentication
+          KEYCLOAK_URL=http://localhost:8080
+          REALM_NAME=test-realm
+          CLIENT_ID=test-client
+          CLIENT_SECRET=test-secret
+          
+          # Test credentials
+          TEST_USERNAME=test_user
+          TEST_PASSWORD=test_pass
+          
+          # Swagger settings
+          SWAGGER_TITLE=POP API Test
+          SWAGGER_DESCRIPTION=Test environment
+          ORGANIZATION=Test Organization
+          
+          # External services
+          USE_JUPYTERLAB=false
+          JUPYTER_URL=
+          USE_DXSPACES=false
+          DXSPACES_URL=
+          EOF
 
       - name: Start Docker containers
-        run: ./start-dockers.sh
+        run: |
+          echo "Starting Docker containers with docker-compose..."
+          docker-compose up -d
+          echo "Containers started successfully"
 
       - name: Wait for container and install test dependencies
         run: |
@@ -207,7 +249,10 @@ jobs:
 
       - name: Cleanup containers
         if: always()
-        run: ./stop-dockers.sh
+        run: |
+          echo "Stopping Docker containers..."
+          docker-compose down -v
+          echo "Containers stopped and cleaned up"
 
   # Notification job for failures
   notify-failure:
