@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 import api.routes as routes
 from api.config import ckan_settings, swagger_settings
 from api.tasks.metrics_task import record_system_metrics
+from api.routes.update_routes.put_dataset import router as dataset_update_router
 
 # Define the format for all logs (timestamp, level, message)
 log_formatter = logging.Formatter(
@@ -83,7 +84,9 @@ if ckan_settings.ckan_local_enabled:
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
 app.include_router(routes.redirect_router, tags=["Redirect"])
-
+if ckan_settings.ckan_local_enabled:
+    app.include_router(routes.update_router, tags=["Update"])
+    app.include_router(dataset_update_router, tags=["Update"])
 
 # Custom OpenAPI Schema for Swagger
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
