@@ -1,5 +1,6 @@
 # api/services/url_services/update_dataset.py
 from api.models.update_dataset_model import DatasetUpdateRequest
+from api.config import ckan_settings
 
 async def update_dataset(dataset_id: str, data: DatasetUpdateRequest, ckan_instance=None):
     if ckan_instance is None:
