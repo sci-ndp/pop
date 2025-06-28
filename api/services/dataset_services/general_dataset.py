@@ -7,7 +7,7 @@ from api.config.ckan_settings import ckan_settings
 RESERVED_KEYS = {
     "name",
     "title",
-    "owner_org", 
+    "owner_org",
     "notes",
     "id",
     "resources",
@@ -18,7 +18,7 @@ RESERVED_KEYS = {
     "state",
     "created",
     "last_modified",
-    "url"
+    "url",
 }
 
 
@@ -88,8 +88,7 @@ def create_general_dataset(
     # Check reserved keys
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Determine the CKAN instance
@@ -122,9 +121,7 @@ def create_general_dataset(
 
     # Handle extras
     if extras:
-        dataset_dict["extras"] = [
-            {"key": k, "value": v} for k, v in extras.items()
-        ]
+        dataset_dict["extras"] = [{"key": k, "value": v} for k, v in extras.items()]
 
     # Create the CKAN dataset
     try:
@@ -215,8 +212,7 @@ def update_general_dataset(
 
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: "
-            f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     try:
@@ -250,13 +246,10 @@ def update_general_dataset(
     # Handle extras - merge with existing if provided
     if extras is not None:
         current_extras = {
-            extra["key"]: extra["value"]
-            for extra in dataset.get("extras", [])
+            extra["key"]: extra["value"] for extra in dataset.get("extras", [])
         }
         current_extras.update(extras)
-        dataset["extras"] = [
-            {"key": k, "value": v} for k, v in current_extras.items()
-        ]
+        dataset["extras"] = [{"key": k, "value": v} for k, v in current_extras.items()]
 
     try:
         updated_dataset = ckan_instance.action.package_update(**dataset)

@@ -41,11 +41,11 @@ router = APIRouter()
         "### Example Payload (partial update)\n"
         "```json\n"
         "{\n"
-        '    \"title\": \"Updated Dataset Title\",\n'
-        '    \"extras\": {\n'
-        '        \"version\": \"1.1\",\n'
-        '        \"last_modified\": \"2024-01-15\"\n'
-        '    }\n'
+        '    "title": "Updated Dataset Title",\n'
+        '    "extras": {\n'
+        '        "version": "1.1",\n'
+        '        "last_modified": "2024-01-15"\n'
+        "    }\n"
         "}\n"
         "```\n"
         "Note: Only `title` and `extras` will be updated. All other fields "
@@ -65,18 +65,14 @@ router = APIRouter()
             "description": "Bad Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Error updating dataset: <error message>"
-                    }
+                    "example": {"detail": "Error updating dataset: <error message>"}
                 }
             },
         },
         404: {
             "description": "Not Found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Dataset not found"}
-                }
+                "application/json": {"example": {"detail": "Dataset not found"}}
             },
         },
     },
@@ -85,8 +81,7 @@ async def patch_general_dataset_endpoint(
     dataset_id: str,
     data: GeneralDatasetUpdateRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local", 
-        description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Choose 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
     _: Dict[str, Any] = Depends(get_current_user),
 ):
@@ -123,8 +118,7 @@ async def patch_general_dataset_endpoint(
         if server == "pre_ckan":
             if not ckan_settings.pre_ckan_enabled:
                 raise HTTPException(
-                    status_code=400, 
-                    detail="Pre-CKAN is disabled and cannot be used."
+                    status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
             ckan_instance = ckan_settings.pre_ckan
         else:
@@ -150,20 +144,16 @@ async def patch_general_dataset_endpoint(
             version=data.version,
             ckan_instance=ckan_instance,
         )
-        
+
         if not updated_id:
-            raise HTTPException(
-                status_code=404, detail="Dataset not found"
-            )
-        
+            raise HTTPException(status_code=404, detail="Dataset not found")
+
         return {"message": "Dataset updated successfully"}
 
     except HTTPException as he:
         raise he
     except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except KeyError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -177,9 +167,7 @@ async def patch_general_dataset_endpoint(
                 detail="Pre-CKAN server is not configured or unreachable.",
             )
         if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=404, detail="Dataset not found"
-            )
+            raise HTTPException(status_code=404, detail="Dataset not found")
         raise HTTPException(
             status_code=400, detail=f"Error updating dataset: {error_msg}"
         )

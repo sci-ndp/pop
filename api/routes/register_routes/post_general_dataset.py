@@ -40,23 +40,23 @@ router = APIRouter()
         "### Example Payload\n"
         "```json\n"
         "{\n"
-        '    \"name\": \"my_research_dataset\",\n'
-        '    \"title\": \"My Research Dataset\",\n'
-        '    \"owner_org\": \"research_group\",\n'
-        '    \"notes\": \"A comprehensive research dataset\",\n'
-        '    \"tags\": [\"research\", \"climate\"],\n'
-        '    \"extras\": {\n'
-        '        \"project\": \"climate_study\",\n'
-        '        \"version\": \"1.0\"\n'
-        '    },\n'
-        '    \"resources\": [\n'
-        '        {\n'
-        '            \"url\": \"http://example.com/data.csv\",\n'
-        '            \"name\": \"main_data\",\n'
-        '            \"format\": \"CSV\",\n'
-        '            \"description\": \"Primary dataset\"\n'
-        '        }\n'
-        '    ]\n'
+        '    "name": "my_research_dataset",\n'
+        '    "title": "My Research Dataset",\n'
+        '    "owner_org": "research_group",\n'
+        '    "notes": "A comprehensive research dataset",\n'
+        '    "tags": ["research", "climate"],\n'
+        '    "extras": {\n'
+        '        "project": "climate_study",\n'
+        '        "version": "1.0"\n'
+        "    },\n"
+        '    "resources": [\n'
+        "        {\n"
+        '            "url": "http://example.com/data.csv",\n'
+        '            "name": "main_data",\n'
+        '            "format": "CSV",\n'
+        '            "description": "Primary dataset"\n'
+        "        }\n"
+        "    ]\n"
         "}\n"
         "```\n"
     ),
@@ -76,9 +76,7 @@ router = APIRouter()
                     "example": {
                         "detail": {
                             "error": "Duplicate Dataset",
-                            "detail": (
-                                "A dataset with the given name already exists."
-                            ),
+                            "detail": ("A dataset with the given name already exists."),
                         }
                     }
                 }
@@ -92,16 +90,12 @@ router = APIRouter()
                         "server_error": {
                             "summary": "Server configuration error",
                             "value": {
-                                "detail": (
-                                    "Server is not configured or unreachable."
-                                )
+                                "detail": ("Server is not configured or unreachable.")
                             },
                         },
                         "general_error": {
                             "summary": "General error",
-                            "value": {
-                                "detail": "Error creating dataset: <error>"
-                            },
+                            "value": {"detail": "Error creating dataset: <error>"},
                         },
                     }
                 }
@@ -112,8 +106,7 @@ router = APIRouter()
 async def create_general_dataset_endpoint(
     data: GeneralDatasetRequest,
     server: Literal["local", "pre_ckan"] = Query(
-        "local", 
-        description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
+        "local", description="Specify 'local' or 'pre_ckan'. Defaults to 'local'."
     ),
     _: Dict[str, Any] = Depends(get_current_user),
 ):
@@ -147,8 +140,7 @@ async def create_general_dataset_endpoint(
         if server == "pre_ckan":
             if not ckan_settings.pre_ckan_enabled:
                 raise HTTPException(
-                    status_code=400, 
-                    detail="Pre-CKAN is disabled and cannot be used."
+                    status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
 
             document = data.dict()
@@ -158,8 +150,7 @@ async def create_general_dataset_endpoint(
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        f"Missing required fields for pre_ckan: "
-                        f"{missing_fields}"
+                        f"Missing required fields for pre_ckan: " f"{missing_fields}"
                     ),
                 )
 
@@ -190,9 +181,7 @@ async def create_general_dataset_endpoint(
 
     except ValueError as exc:
         # Handle validation errors
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except KeyError as exc:
         # Handle reserved key errors
         raise HTTPException(
@@ -205,8 +194,7 @@ async def create_general_dataset_endpoint(
         # Handle specific error cases
         if "No scheme supplied" in error_msg:
             raise HTTPException(
-                status_code=400, 
-                detail="Server is not configured or unreachable."
+                status_code=400, detail="Server is not configured or unreachable."
             )
         if (
             "That name is already in use" in error_msg
