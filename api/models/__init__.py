@@ -6,6 +6,10 @@ from .general_dataset_request_model import (  # noqa: F401
     GeneralDatasetUpdateRequest,
     ResourceRequest,
 )
+from .general_dataset_response_model import (  # noqa: F401
+    GeneralDatasetResponse,
+    ResourceResponse,
+)
 from .organizationdeleterequest_model import (  # noqa: F401
     OrganizationDeleteRequest,
 )
