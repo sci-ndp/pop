@@ -7,7 +7,7 @@ from api.config.ckan_settings import ckan_settings
 RESERVED_KEYS = {
     "name",
     "title",
-    "owner_org",
+    "owner_org", 
     "notes",
     "id",
     "resources",
@@ -16,6 +16,9 @@ RESERVED_KEYS = {
     "license_id",
     "version",
     "state",
+    "created",
+    "last_modified",
+    "url"
 }
 
 
@@ -25,6 +28,7 @@ def create_general_dataset(
     owner_org: str,
     notes: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    groups: Optional[List[str]] = None,
     extras: Optional[Dict[str, Any]] = None,
     resources: Optional[List[Dict[str, Any]]] = None,
     private: Optional[bool] = False,
@@ -47,6 +51,8 @@ def create_general_dataset(
         Description or notes about the dataset.
     tags : Optional[List[str]]
         List of tags for categorizing the dataset.
+    groups : Optional[List[str]]
+        List of groups for the dataset.
     extras : Optional[Dict[str, Any]]
         Additional metadata as key-value pairs.
     resources : Optional[List[Dict[str, Any]]]
@@ -82,7 +88,8 @@ def create_general_dataset(
     # Check reserved keys
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: "
+            f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     # Determine the CKAN instance
@@ -109,9 +116,15 @@ def create_general_dataset(
     if tags:
         dataset_dict["tags"] = [{"name": tag} for tag in tags]
 
+    # Handle groups
+    if groups:
+        dataset_dict["groups"] = [{"name": group} for group in groups]
+
     # Handle extras
     if extras:
-        dataset_dict["extras"] = [{"key": k, "value": v} for k, v in extras.items()]
+        dataset_dict["extras"] = [
+            {"key": k, "value": v} for k, v in extras.items()
+        ]
 
     # Create the CKAN dataset
     try:
@@ -140,6 +153,7 @@ def update_general_dataset(
     owner_org: Optional[str] = None,
     notes: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    groups: Optional[List[str]] = None,
     extras: Optional[Dict[str, Any]] = None,
     resources: Optional[List[Dict[str, Any]]] = None,
     private: Optional[bool] = None,
@@ -201,7 +215,8 @@ def update_general_dataset(
 
     if extras and RESERVED_KEYS.intersection(extras):
         raise KeyError(
-            "Extras contain reserved keys: " f"{RESERVED_KEYS.intersection(extras)}"
+            "Extras contain reserved keys: "
+            f"{RESERVED_KEYS.intersection(extras)}"
         )
 
     try:
@@ -228,13 +243,20 @@ def update_general_dataset(
     if tags is not None:
         dataset["tags"] = [{"name": tag} for tag in tags]
 
+    # Handle groups
+    if groups is not None:
+        dataset["groups"] = [{"name": group} for group in groups]
+
     # Handle extras - merge with existing if provided
     if extras is not None:
         current_extras = {
-            extra["key"]: extra["value"] for extra in dataset.get("extras", [])
+            extra["key"]: extra["value"]
+            for extra in dataset.get("extras", [])
         }
         current_extras.update(extras)
-        dataset["extras"] = [{"key": k, "value": v} for k, v in current_extras.items()]
+        dataset["extras"] = [
+            {"key": k, "value": v} for k, v in current_extras.items()
+        ]
 
     try:
         updated_dataset = ckan_instance.action.package_update(**dataset)
@@ -250,6 +272,7 @@ def patch_general_dataset(
     owner_org: Optional[str] = None,
     notes: Optional[str] = None,
     tags: Optional[List[str]] = None,
+    groups: Optional[List[str]] = None,
     extras: Optional[Dict[str, Any]] = None,
     resources: Optional[List[Dict[str, Any]]] = None,
     private: Optional[bool] = None,
@@ -312,6 +335,7 @@ def patch_general_dataset(
         owner_org=owner_org,
         notes=notes,
         tags=tags,
+        groups=groups,
         extras=extras,
         resources=resources,
         private=private,
