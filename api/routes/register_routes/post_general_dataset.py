@@ -143,7 +143,7 @@ async def create_general_dataset_endpoint(
                     status_code=400, detail="Pre-CKAN is disabled and cannot be used."
                 )
 
-            document = data.dict()
+            document = data.model_dump()
             missing_fields = validate_preckan_fields(document)
 
             if missing_fields:
@@ -161,7 +161,7 @@ async def create_general_dataset_endpoint(
         # Convert ResourceRequest objects to dictionaries
         resources = None
         if data.resources:
-            resources = [resource.dict() for resource in data.resources]
+            resources = [resource.model_dump() for resource in data.resources]
 
         dataset_id = create_general_dataset(
             name=data.name,

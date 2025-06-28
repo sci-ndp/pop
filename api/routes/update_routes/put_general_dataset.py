@@ -123,7 +123,7 @@ async def update_general_dataset_endpoint(
         # Convert ResourceRequest objects to dictionaries
         resources = None
         if data.resources:
-            resources = [resource.dict() for resource in data.resources]
+            resources = [resource.model_dump() for resource in data.resources]
 
         updated_id = update_general_dataset(
             dataset_id=dataset_id,
