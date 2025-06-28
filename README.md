@@ -190,6 +190,17 @@ curl -X POST "http://localhost:8001/kafka" \
 - **Testing**: pytest with coverage
 - **Type Hints**: Required for all functions
 
+## 📖 Documentation
+
+### Tutorial
+Complete step-by-step tutorial: [`docs/general_dataset_api_tutorial.ipynb`](docs/general_dataset_api_tutorial.ipynb)
+
+Learn how to:
+- Authenticate and create organizations
+- Create and manage datasets with metadata
+- Handle resources, tags, and custom fields
+- Update datasets and handle errors
+
 ## 🧪 Testing
 
 ```bash

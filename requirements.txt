@@ -11,6 +11,8 @@ pytest-mock
 trio
 pytest-asyncio
 psutil
-requests
+requests>=2.25.0
 fastapi-utils
 pytest-cov
+requests
+jupyter>=1.0.0
