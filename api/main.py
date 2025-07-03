@@ -14,8 +14,8 @@ from fastapi.staticfiles import StaticFiles
 
 import api.routes as routes
 from api.config import ckan_settings, swagger_settings
-from api.tasks.metrics_task import record_system_metrics
 from api.routes.update_routes.put_dataset import router as dataset_update_router
+from api.tasks.metrics_task import record_system_metrics
 
 # Define the format for all logs (timestamp, level, message)
 log_formatter = logging.Formatter(

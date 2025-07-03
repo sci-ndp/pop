@@ -1,8 +1,11 @@
 # api/services/url_services/update_dataset.py
-from api.models.update_dataset_model import DatasetUpdateRequest
 from api.config import ckan_settings
+from api.models.update_dataset_model import DatasetUpdateRequest
 
-async def update_dataset(dataset_id: str, data: DatasetUpdateRequest, ckan_instance=None):
+
+async def update_dataset(
+    dataset_id: str, data: DatasetUpdateRequest, ckan_instance=None
+):
     if ckan_instance is None:
         ckan_instance = ckan_settings.ckan
 
@@ -21,7 +24,9 @@ async def update_dataset(dataset_id: str, data: DatasetUpdateRequest, ckan_insta
 
     existing_extras = {e["key"]: e["value"] for e in dataset.get("extras", [])}
     new_extras = data.extras or {}
-    merged_extras = [{"key": k, "value": v} for k, v in {**existing_extras, **new_extras}.items()]
+    merged_extras = [
+        {"key": k, "value": v} for k, v in {**existing_extras, **new_extras}.items()
+    ]
 
     patch_fields = {
         "id": dataset_id,
