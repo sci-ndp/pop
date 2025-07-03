@@ -5,7 +5,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from api.config.ckan_settings import ckan_settings
-from api.models.update_dataset_model import DatasetUpdateRequest
+
 logger = logging.getLogger(__name__)
 
 RESERVED_KEYS = {
