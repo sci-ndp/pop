@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     jupyter_url: str = "https://jupyter.org/try-jupyter/lab/"
     use_dxspaces: bool = False
     dxspaces_url: str = "http://localhost:8001"
+    
+    # Endpoint Tracking Configuration
+    endpoint_tracking_enabled: bool = True
+    endpoint_tracking_api_url: str = "https://api.example.com/endpoint-tracking"
+    # Endpoint tracking configuration
+    endpoint_tracking_enabled: bool = True
 
     model_config = {
         "env_file": ".env",

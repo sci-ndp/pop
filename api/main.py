@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
 
@@ -14,11 +15,21 @@ from fastapi.staticfiles import StaticFiles
 
 import api.routes as routes
 from api.config import ckan_settings, swagger_settings
+from api.middleware.endpoint_tracking_middleware import EndpointTrackingMiddleware
 from api.routes.update_routes.put_dataset import router as dataset_update_router
 from api.tasks.metrics_task import record_system_metrics
 
+# Custom formatter that uses local time
+class LocalTimeFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        """Override formatTime to use local time instead of UTC"""
+        if datefmt:
+            return time.strftime(datefmt, time.localtime(record.created))
+        else:
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created))
+
 # Define the format for all logs (timestamp, level, message)
-log_formatter = logging.Formatter(
+log_formatter = LocalTimeFormatter(
     "%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
 )
 
@@ -69,6 +80,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add endpoint tracking middleware
+app.add_middleware(EndpointTrackingMiddleware)
+
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -83,6 +97,7 @@ if ckan_settings.ckan_local_enabled:
     app.include_router(routes.delete_router, tags=["Delete"])
 app.include_router(routes.token_router, tags=["Token"])
 app.include_router(routes.status_router, prefix="/status", tags=["Status"])
+app.include_router(routes.tracking_router, prefix="/tracking", tags=["Tracking"])
 app.include_router(routes.redirect_router, tags=["Redirect"])
 if ckan_settings.ckan_local_enabled:
     app.include_router(routes.update_router, tags=["Update"])

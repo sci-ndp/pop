@@ -7,6 +7,9 @@ services:
     container_name: pop-api
     ports:
       - "8003:8000"
+    environment:
+      - PYTHONPATH=/code
+      - TZ=${TZ:-UTC}  # Use host TZ environment variable, fallback to UTC
     volumes:
       - ./api:/code/api
       - ./.env:/code/.env
@@ -15,8 +18,8 @@ services:
       - ./static:/code/static
       - ./pytest.ini:/code/pytest.ini
       - ./logs:/code/logs
-    environment:
-      - PYTHONPATH=/code
+      - /etc/localtime:/etc/localtime:ro  # Mount host timezone info (Linux/macOS)
+      - /etc/timezone:/etc/timezone:ro    # Mount host timezone name (Linux)
     networks:
       - backend
     # Add a step to install dependencies before starting the server
